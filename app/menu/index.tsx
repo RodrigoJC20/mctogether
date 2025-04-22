@@ -1,12 +1,13 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import menuData from '../../assets/data/menu.json';
 
 interface MenuItem {
   id: string;
   name: string;
   price: number;
-  image: any;
+  imageName: string;
 }
 
 // Get fallback image
@@ -16,21 +17,6 @@ const FALLBACK_IMAGE = require('../../assets/images/menu/null.png');
 const getMenuImage = (imageName: string) => {
   return FALLBACK_IMAGE;
 };
-
-const menuItems: MenuItem[] = [
-  {
-    id: '1',
-    name: 'BigMac',
-    price: 31.00,
-    image: getMenuImage('bigmac')
-  },
-  {
-    id: '2',
-    name: 'McFeast',
-    price: 35.00,
-    image: getMenuImage('mcfeast')
-  },
-];
 
 export default function Menu() {
   const router = useRouter();
@@ -47,17 +33,14 @@ export default function Menu() {
       <Text style={styles.title}>Menu</Text>
       
       <ScrollView contentContainerStyle={styles.menuGrid}>
-        {menuItems.map((item) => (
+        {menuData.menuItems.map((item: MenuItem) => (
           <View key={item.id} style={styles.menuItem}>
             <View style={styles.imageContainer}>
-              <Image source={item.image} style={styles.itemImage} />
+              <Image source={getMenuImage(item.imageName)} style={styles.itemImage} />
             </View>
-            <Text style={styles.itemName}>{item.name}</Text>
-            <View style={styles.priceContainer}>
-              <Text style={styles.priceText}>From R{item.price.toFixed(2)}</Text>
-              <TouchableOpacity style={styles.addButton}>
-                <Text style={styles.addButtonText}>ADD</Text>
-              </TouchableOpacity>
+            <View style={styles.infoContainer}>
+              <Text style={styles.itemName}>{item.name}</Text>
+              <Text style={styles.priceText}>${item.price.toFixed(2)}</Text>
             </View>
           </View>
         ))}
@@ -69,11 +52,11 @@ export default function Menu() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#ffffff',
     paddingTop: 60,
   },
   title: {
-    color: 'white',
+    color: '#000000',
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -83,7 +66,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 40,
     left: 20,
-    backgroundColor: '#00000088',
+    backgroundColor: '#000000',
     borderRadius: 20,
     padding: 10,
     zIndex: 10
@@ -97,49 +80,44 @@ const styles = StyleSheet.create({
   menuItem: {
     width: '45%',
     margin: 10,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#ffffff',
     borderRadius: 15,
-    padding: 15,
-    alignItems: 'center',
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   imageContainer: {
-    width: 120,
+    width: '100%',
     height: 120,
-    marginBottom: 10,
+    backgroundColor: '#FFD700', // Yellow background
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 10,
   },
   itemImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'contain',
   },
-  itemName: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  priceContainer: {
-    width: '100%',
+  infoContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 5,
+    padding: 15,
+    backgroundColor: '#ffffff',
+  },
+  itemName: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: 'bold',
+    flex: 1,
   },
   priceText: {
-    color: '#4CAF50',
+    color: '#FF0000',
     fontSize: 14,
-  },
-  addButton: {
-    backgroundColor: '#E23744',
-    paddingHorizontal: 15,
-    paddingVertical: 5,
-    borderRadius: 5,
-  },
-  addButtonText: {
-    color: 'white',
-    fontSize: 12,
     fontWeight: 'bold',
   },
 }); 
