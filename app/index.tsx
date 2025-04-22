@@ -1,11 +1,16 @@
-import React from 'react';
-import { View, ImageBackground, StyleSheet, Image, TouchableOpacity, Text, Modal, ScrollView, Alert } from 'react-native';
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { View, ImageBackground, StyleSheet, TouchableOpacity, Text, Modal, ScrollView, Alert, ImageSourcePropType } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { useGroup } from './hooks/useGroup';
 import { QRCodeComponent } from './components/QRCode';
 import { groupApi } from './api/client';
+import PetsArea from './components/PetsArea';
+
+interface Pet {
+  id: string | number;
+  image: ImageSourcePropType;
+}
 
 export default function Home() {
   const router = useRouter();
@@ -13,7 +18,21 @@ export default function Home() {
   const [showQR, setShowQR] = useState(false);
   const [mode, setMode] = useState<'scan' | 'display'>('display');
   const [currentUserId, setCurrentUserId] = useState(1);
+  const [showDebugPerimeter, setShowDebugPerimeter] = useState<boolean>(true);
+
   const { loading, error, groupId, createGroup, joinGroup } = useGroup();
+
+  // Pet data - you would normally get this from your state/backend
+  const myPet: Pet = {
+    id: 'my-pet-1',
+    image: require('../assets/images/pet.png')
+  };
+  
+  // Mock data for friend pets (for demonstration)
+  const friendPets: Pet[] = [
+    // This will be populated when friends join your party
+    // Example: { id: 'friend-pet-1', image: require('../assets/images/friend-pet.png') }
+  ];
 
   const handleCreateParty = async () => {
     try {
@@ -26,7 +45,6 @@ export default function Home() {
   };
 
   const handleJoinParty = () => {
-    setMode('scan');
     setShowQR(true);
   };
 
@@ -84,6 +102,11 @@ export default function Home() {
     }
   };
 
+  // Toggle debug perimeter visibility
+  const toggleDebugPerimeter = () => {
+    setShowDebugPerimeter(prev => !prev);
+  };
+
   const renderUserSelector = () => (
     <ScrollView 
       horizontal 
@@ -118,38 +141,53 @@ export default function Home() {
 
   return (
     <ImageBackground source={require('../assets/images/bg.jpeg')} style={styles.background}>
-      {renderUserSelector()}
+      {/* Pets Area - This will handle all pet movement and rendering */}
+      <PetsArea 
+        myPet={myPet} 
+        friendPets={friendPets} 
+        showDebugPerimeter={showDebugPerimeter} 
+      />
       
-      {/* Currency */}
-      <View style={styles.topRight}>
-        <FontAwesome5 name="coins" size={20} color="white" />
-        <Text style={styles.currencyText}>1234</Text>
+      {/* UI Elements - These will always be on top */}
+      <View style={styles.uiLayer}>
+        {renderUserSelector()}
+        
+        {/* Currency */}
+        <View style={styles.topRight}>
+          <FontAwesome5 name="coins" size={20} color="white" />
+          <Text style={styles.currencyText}>1234</Text>
+        </View>
+
+        {/* Shop Button */}
+        <TouchableOpacity style={styles.topLeftButton} onPress={() => router.push('/shop')}>
+          <FontAwesome5 name="shopping-bag" size={24} color="white" />
+        </TouchableOpacity>
+
+        {/* Medals Button */}
+        <TouchableOpacity style={styles.bottomLeftButton} onPress={() => router.push('/medals')}>
+          <FontAwesome5 name="trophy" size={24} color="white" />
+        </TouchableOpacity>
+
+        {/* Items Button */}
+        <TouchableOpacity style={styles.bottomRightButton} onPress={() => router.push('/items')}>
+          <MaterialIcons name="pets" size={28} color="white" />
+        </TouchableOpacity>
+
+        {/* Party Button */}
+        <TouchableOpacity style={styles.partyButton} onPress={() => setModalVisible(true)}>
+          <Text style={styles.partyText}>Party</Text>
+        </TouchableOpacity>
+
+        {/* Debug Toggle Button */}
+        <TouchableOpacity 
+          style={styles.debugButton}
+          onPress={toggleDebugPerimeter}
+        >
+          <Text style={styles.debugButtonText}>
+            {showDebugPerimeter ? "Hide Debug" : "Show Debug"}
+          </Text>
+        </TouchableOpacity>
       </View>
-
-      {/* Shop Button */}
-      <TouchableOpacity style={styles.topLeftButton} onPress={() => router.push('/shop')}>
-        <FontAwesome5 name="shopping-bag" size={24} color="white" />
-      </TouchableOpacity>
-
-      {/* Pet Image */}
-      <View style={styles.petContainer}>
-        <Image source={require('../assets/images/pet.png')} style={styles.petImage} />
-      </View>
-
-      {/* Medals Button */}
-      <TouchableOpacity style={styles.bottomLeftButton} onPress={() => router.push('/medals')}>
-        <FontAwesome5 name="trophy" size={24} color="white" />
-      </TouchableOpacity>
-
-      {/* Items Button */}
-      <TouchableOpacity style={styles.bottomRightButton} onPress={() => router.push('/items')}>
-        <MaterialIcons name="pets" size={28} color="white" />
-      </TouchableOpacity>
-
-      {/* Party Button */}
-      <TouchableOpacity style={styles.partyButton} onPress={() => setModalVisible(true)}>
-        <Text style={styles.partyText}>Party</Text>
-      </TouchableOpacity>
 
       {/* Party Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
@@ -176,20 +214,15 @@ export default function Home() {
             ) : (
               <>
                 <Text style={styles.modalText}>
-                  {mode === 'display' ? 'Share this QR code!' : 'Scan a QR code to join!'}
+                  {groupId ? 'Scan this QR code to join!' : 'Scan a QR code to join a party!'}
                 </Text>
-                <QRCodeComponent 
-                  mode={mode}
-                  groupId={groupId || undefined}
-                  onScan={handleQRScanned}
-                />
+                <QRCodeComponent groupId={groupId || ''} mode="display" />
               </>
             )}
             <TouchableOpacity 
               onPress={() => {
                 setModalVisible(false);
                 setShowQR(false);
-                setMode('display');
               }} 
               style={styles.closeButton}
             >
@@ -207,6 +240,12 @@ const styles = StyleSheet.create({
     flex: 1,
     resizeMode: 'cover',
     justifyContent: 'center',
+  },
+  uiLayer: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    zIndex: 2, // Higher than pets layer
   },
   userSelectorContainer: {
     position: 'absolute',
@@ -296,13 +335,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  petContainer: {
-    alignItems: 'center',
+  debugButton: {
+    position: 'absolute',
+    top: 100,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0, 120, 255, 0.7)',
+    borderRadius: 15,
+    paddingVertical: 6,
+    paddingHorizontal: 15,
   },
-  petImage: {
-    width: 200,
-    height: 200,
-    resizeMode: 'contain',
+  debugButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
@@ -316,7 +361,6 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     width: '80%',
-    position: 'relative',
   },
   modalText: {
     color: 'white',
@@ -339,14 +383,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   closeButton: {
-    position: 'absolute',
-    top: -50,
-    right: 0,
+    marginTop: 15,
     backgroundColor: '#444',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    zIndex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
   },
   closeText: {
     color: 'skyblue',
