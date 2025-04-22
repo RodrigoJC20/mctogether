@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mt",
-    "slug": "mt",
+    "name": "mctogether",
+    "slug": "mctogether",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -36,6 +36,9 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "apiBaseUrl": "http://192.168.100.92:3000"
     }
   }
 }

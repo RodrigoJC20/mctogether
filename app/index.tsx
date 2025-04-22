@@ -16,6 +16,7 @@ export default function Home() {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [mode, setMode] = useState<'scan' | 'display'>('display');
   const { loading, error, groupId, createGroup, joinGroup } = useGroup();
 
   // Pet data - you would normally get this from your state/backend
@@ -34,6 +35,7 @@ export default function Home() {
   const handleCreateParty = async () => {
     try {
       await createGroup(1); // Hardcoded user ID 1
+      setMode('display');
       setShowQR(true);
     } catch (err) {
       console.error('Failed to create party:', err);
@@ -41,7 +43,18 @@ export default function Home() {
   };
 
   const handleJoinParty = () => {
+    setMode('scan');
     setShowQR(true);
+  };
+
+  const handleQRScanned = async (data: string) => {
+    try {
+      await joinGroup(data, 1); // Hardcoded user ID 1
+      setShowQR(false);
+      setModalVisible(false);
+    } catch (err) {
+      console.error('Failed to join party:', err);
+    }
   };
 
   return (
@@ -100,15 +113,20 @@ export default function Home() {
             ) : (
               <>
                 <Text style={styles.modalText}>
-                  {groupId ? 'Scan this QR code to join!' : 'Scan a QR code to join a party!'}
+                  {mode === 'display' ? 'Share this QR code!' : 'Scan a QR code to join!'}
                 </Text>
-                <QRCode groupId={groupId || ''} />
+                <QRCodeComponent 
+                  mode={mode}
+                  groupId={groupId || undefined}
+                  onScan={handleQRScanned}
+                />
               </>
             )}
             <TouchableOpacity 
               onPress={() => {
                 setModalVisible(false);
                 setShowQR(false);
+                setMode('display');
               }} 
               style={styles.closeButton}
             >
@@ -199,6 +217,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     width: '80%',
+    position: 'relative',
   },
   modalText: {
     color: 'white',
@@ -221,11 +240,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   closeButton: {
-    marginTop: 15,
+    position: 'absolute',
+    top: -50,
+    right: 0,
     backgroundColor: '#444',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    zIndex: 1,
   },
   closeText: {
     color: 'skyblue',
