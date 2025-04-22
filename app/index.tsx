@@ -8,7 +8,7 @@ export default function Home() {
   const [modalVisible, setModalVisible] = useState(false);
 
   return (
-    <ImageBackground source={require('../assets/bg.jpeg')} style={styles.background}>
+    <ImageBackground source={require('../assets/images/bg.jpeg')} style={styles.background}>
       {/* Currency */}
       <View style={styles.topRight}>
         <FontAwesome5 name="coins" size={20} color="white" />
@@ -22,7 +22,7 @@ export default function Home() {
 
       {/* Pet Image */}
       <View style={styles.petContainer}>
-        <Image source={require('../assets/pet.png')} style={styles.petImage} />
+        <Image source={require('../assets/images/pet.png')} style={styles.petImage} />
       </View>
 
       {/* Medals Button */}
