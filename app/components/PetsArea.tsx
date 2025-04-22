@@ -1,6 +1,6 @@
 // components/PetsArea.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Image, StyleSheet, Dimensions, ImageSourcePropType, Animated, Easing } from 'react-native';
+import { View, Image, StyleSheet, Dimensions, ImageSourcePropType, Animated, Easing, Text } from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -32,9 +32,14 @@ interface PetState extends Pet {
 interface PetsAreaProps {
   myPet: Pet;
   friendPets?: Pet[];
+  showDebugPerimeter?: boolean; // Toggle to show/hide debug perimeter
 }
 
-const PetsArea: React.FC<PetsAreaProps> = ({ myPet, friendPets = [] }) => {
+const PetsArea: React.FC<PetsAreaProps> = ({ 
+  myPet, 
+  friendPets = [],
+  showDebugPerimeter = true // Default to showing the perimeter for debugging
+}) => {
   // Combine my pet with friend pets for unified handling
   const allPets = [myPet, ...friendPets];
   
@@ -216,8 +221,24 @@ const PetsArea: React.FC<PetsAreaProps> = ({ myPet, friendPets = [] }) => {
     });
   };
   
+  // Calculate perimeter dimensions based on boundaries
+  const perimeterStyle = {
+    top: BOUNDARIES.top,
+    left: BOUNDARIES.left,
+    width: SCREEN_WIDTH - BOUNDARIES.left - BOUNDARIES.right,
+    height: SCREEN_HEIGHT - BOUNDARIES.top - BOUNDARIES.bottom,
+  };
+  
   return (
     <View style={styles.container}>
+      {/* Debug perimeter to show boundaries */}
+      {showDebugPerimeter && (
+        <View style={[styles.debugPerimeter, perimeterStyle]}>
+          {/* Pet area label */}
+          <Text style={styles.debugLabel}>Pet Area</Text>
+        </View>
+      )}
+      
       {pets.map((pet, index) => {
         // Create rotation transform based on walking animation
         const rotateInterpolation = pet.walkValue.interpolate({
@@ -269,6 +290,20 @@ const styles = StyleSheet.create({
     height: 100,
     resizeMode: 'contain',
   },
+  debugPerimeter: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: 'rgba(0, 120, 255, 0.5)', // Semi-transparent blue
+    borderStyle: 'dashed',
+    backgroundColor: 'rgba(0, 120, 255, 0.1)', // Very light blue background
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  debugLabel: {
+    color: 'rgba(0, 120, 255, 0.7)',
+    fontWeight: 'bold',
+    fontSize: 16,
+  }
 });
 
 export default PetsArea;
