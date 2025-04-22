@@ -1,16 +1,35 @@
 import React from 'react';
-import { View, ImageBackground, StyleSheet, Image, TouchableOpacity, Text, Modal } from 'react-native';
+import { View, ImageBackground, StyleSheet, TouchableOpacity, Text, Modal, ImageSourcePropType } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { useGroup } from './hooks/useGroup';
 import { QRCode } from './components/QRCode';
+import PetsArea from './components/PetsArea';
+
+interface Pet {
+  id: string | number;
+  image: ImageSourcePropType;
+}
 
 export default function Home() {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const { loading, error, groupId, createGroup, joinGroup } = useGroup();
+
+  // Pet data - you would normally get this from your state/backend
+  const myPet: Pet = {
+    id: 'my-pet-1',
+    image: require('../assets/images/pet.png')
+  };
+  
+  // Mock data for friend pets (for demonstration)
+  const friendPets: Pet[] = [
+    // This will be populated when friends join your party
+    // Example: { id: 'friend-pet-1', image: require('../assets/images/friend-pet.png') }
+  ];
+
 
   const handleCreateParty = async () => {
     try {
@@ -27,6 +46,9 @@ export default function Home() {
 
   return (
     <ImageBackground source={require('../assets/images/bg.jpeg')} style={styles.background}>
+      {/* Pets Area - This will handle all pet movement and rendering */}
+      <PetsArea myPet={myPet} friendPets={friendPets} />
+
       {/* Currency */}
       <View style={styles.topRight}>
         <FontAwesome5 name="coins" size={20} color="white" />
@@ -37,11 +59,6 @@ export default function Home() {
       <TouchableOpacity style={styles.topLeftButton} onPress={() => router.push('/shop')}>
         <FontAwesome5 name="shopping-bag" size={24} color="white" />
       </TouchableOpacity>
-
-      {/* Pet Image */}
-      <View style={styles.petContainer}>
-        <Image source={require('../assets/images/pet.png')} style={styles.petImage} />
-      </View>
 
       {/* Medals Button */}
       <TouchableOpacity style={styles.bottomLeftButton} onPress={() => router.push('/medals')}>
