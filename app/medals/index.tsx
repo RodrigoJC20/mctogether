@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import medalsData from '../../assets/data/medals.json';
+import { useState } from 'react';
 
 interface MedalRequirement {
   type: string;
@@ -21,9 +22,14 @@ interface Medal {
 export default function Medals() {
   const router = useRouter();
   const medals: Medal[] = medalsData.medals;
+  const [selectedMedal, setSelectedMedal] = useState<Medal | null>(null);
   
   const renderMedal = (medal: Medal) => (
-    <View key={medal.id} style={styles.medalContainer}>
+    <TouchableOpacity 
+      key={medal.id} 
+      style={styles.medalContainer}
+      onPress={() => setSelectedMedal(medal)}
+    >
       <View style={[styles.medalImageContainer, !medal.earned && styles.lockedMedal]}>
         <Image 
           //source={getMedalImage(medal.image)} 
@@ -41,7 +47,7 @@ export default function Medals() {
       <Text style={styles.requirementText}>
         {formatRequirement(medal.requirements)}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 
   const getMedalImage = (imageName: string) => {
@@ -95,6 +101,44 @@ export default function Medals() {
       <ScrollView contentContainerStyle={styles.medalsGrid}>
         {medals.map(renderMedal)}
       </ScrollView>
+
+      <Modal
+        visible={!!selectedMedal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedMedal(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {selectedMedal && (
+              <>
+                <View style={styles.modalMedalImageContainer}>
+                  <Image 
+                    source={require('../../assets/images/medals/null.png')}
+                    style={styles.modalMedalImage} 
+                  />
+                  {!selectedMedal.earned && (
+                    <View style={styles.modalLockOverlay}>
+                      <Ionicons name="lock-closed" size={32} color="white" />
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.modalMedalName}>{selectedMedal.name}</Text>
+                <Text style={styles.modalMedalDescription}>{selectedMedal.description}</Text>
+                <Text style={styles.modalRequirementText}>
+                  {formatRequirement(selectedMedal.requirements)}
+                </Text>
+                <TouchableOpacity 
+                  style={styles.closeButton}
+                  onPress={() => setSelectedMedal(null)}
+                >
+                  <Ionicons name="close" size={24} color="white" />
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -177,5 +221,66 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textAlign: 'center',
     fontStyle: 'italic',
-  }
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#2a2a2a',
+    borderRadius: 20,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalMedalImageContainer: {
+    width: 150,
+    height: 150,
+    marginBottom: 15,
+    position: 'relative',
+  },
+  modalMedalImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
+  modalLockOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  modalMedalName: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  modalMedalDescription: {
+    color: '#888',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  modalRequirementText: {
+    color: '#666',
+    fontSize: 14,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#00000088',
+    borderRadius: 20,
+    padding: 8,
+  },
 });
