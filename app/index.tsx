@@ -200,6 +200,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     width: '80%',
+    position: 'relative',
   },
   modalText: {
     color: 'white',
@@ -222,11 +223,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   closeButton: {
-    marginTop: 15,
+    position: 'absolute',
+    top: -50,
+    right: 0,
     backgroundColor: '#444',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    zIndex: 1,
   },
   closeText: {
     color: 'skyblue',

@@ -25,7 +25,9 @@ export const QRCodeComponent = ({ groupId, mode, onScan }: QRCodeComponentProps)
       <View style={styles.container}>
         <QRCode
           value={groupId}
-          size={200}
+          size={250}
+          backgroundColor="transparent"
+          color="white"
         />
       </View>
     );
@@ -37,7 +39,7 @@ export const QRCodeComponent = ({ groupId, mode, onScan }: QRCodeComponentProps)
     }
 
     return (
-      <View style={styles.container}>
+      <View style={styles.cameraContainer}>
         <CameraView
           style={styles.camera}
           barcodeScannerSettings={{
@@ -59,11 +61,18 @@ export const QRCodeComponent = ({ groupId, mode, onScan }: QRCodeComponentProps)
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     width: '100%',
     height: 300,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 20,
+  },
+  cameraContainer: {
+    width: '100%',
+    height: 350,
+    overflow: 'hidden',
+    borderRadius: 15,
+    marginVertical: 20,
   },
   camera: {
     flex: 1,
