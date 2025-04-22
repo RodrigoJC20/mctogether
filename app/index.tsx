@@ -12,8 +12,8 @@ import { usePets } from './hooks/usePets';
 export default function Home() {
   const router = useRouter();
   const { modalVisible, setModalVisible, currentUserId, setCurrentUserId } = useUIState();
-  const { showQR, setShowQR, mode, loading, error, groupId, handleCreateParty, handleJoinParty, handleQRScanned } = useQRCode(currentUserId);
-  const { myPet, friendPets, showDebugPerimeter, toggleDebugPerimeter } = usePets();
+  const { showQR, setShowQR, mode, loading, error, groupId, members, handleCreateParty, handleJoinParty, handleQRScanned } = useQRCode(currentUserId);
+  const { myPet, friendPets, showDebugPerimeter, toggleDebugPerimeter } = usePets(groupId, currentUserId, members);
 
   return (
     <ImageBackground source={require('../assets/images/bg.jpeg')} style={styles.background}>
