@@ -6,18 +6,18 @@ interface Pet {
 }
 
 interface GroupMember {
-  userId: number;
+  userId: string;
   role: 'leader' | 'member';
 }
 
-export const usePets = (groupId: string | null, currentUserId: number, members: GroupMember[]) => {
+export const usePets = (groupId: string | null, currentUserId: string | null, members: GroupMember[]) => {
   const [showDebugPerimeter, setShowDebugPerimeter] = useState<boolean>(true);
 
   // Pet data - you would normally get this from your state/backend
-  const myPet: Pet = {
+  const myPet: Pet | null = currentUserId ? {
     id: `pet-${currentUserId}`,
     image: require('../../assets/images/pet.png')
-  };
+  } : null;
   
   // Create friend pets based on group members, excluding current user
   const friendPets: Pet[] = members

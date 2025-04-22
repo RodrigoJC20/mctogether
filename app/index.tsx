@@ -3,17 +3,22 @@ import { View, ImageBackground, StyleSheet, TouchableOpacity, Text, Modal } from
 import { useRouter } from 'expo-router';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { QRCodeComponent } from './components/QRCode';
-import { UserSelector } from './components/UserSelector';
 import PetsArea from './components/PetsArea';
 import { useUIState } from './hooks/useUIState';
 import { useQRCode } from './hooks/useQRCode';
 import { usePets } from './hooks/usePets';
+import { useAuth } from './hooks/useAuth';
 
 export default function Home() {
   const router = useRouter();
-  const { modalVisible, setModalVisible, currentUserId, setCurrentUserId } = useUIState();
-  const { showQR, setShowQR, mode, loading, error, groupId, members, handleCreateParty, handleJoinParty, handleQRScanned } = useQRCode(currentUserId);
-  const { myPet, friendPets, showDebugPerimeter, toggleDebugPerimeter } = usePets(groupId, currentUserId, members);
+  const { user, logout } = useAuth();
+  const { modalVisible, setModalVisible } = useUIState();
+  const { showQR, setShowQR, mode, loading, error, groupId, members, handleCreateParty, handleJoinParty, handleQRScanned } = useQRCode();
+  const { myPet, friendPets, showDebugPerimeter, toggleDebugPerimeter } = usePets(
+    groupId || null, 
+    user?._id || null, 
+    members.map(memberId => ({ userId: memberId, role: 'member' })) || []
+  );
 
   // Close modal when joining a group (but not when creating one)
   useEffect(() => {
@@ -29,6 +34,10 @@ export default function Home() {
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+  };
+
   return (
     <ImageBackground source={require('../assets/images/bg.jpeg')} style={styles.background}>
       {/* Pets Area - This will handle all pet movement and rendering */}
@@ -40,15 +49,18 @@ export default function Home() {
       
       {/* UI Elements - These will always be on top */}
       <View style={styles.uiLayer}>
-        <UserSelector 
-          currentUserId={currentUserId}
-          onSelectUser={setCurrentUserId}
-        />
-        
-        {/* Currency */}
+        {/* User Info and Logout */}
         <View style={styles.topRight}>
+          <Text style={styles.usernameText}>{user?.username}</Text>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Currency */}
+        <View style={styles.currencyContainer}>
           <FontAwesome5 name="coins" size={20} color="white" />
-          <Text style={styles.currencyText}>1234</Text>
+          <Text style={styles.currencyText}>{user?.currency || 0}</Text>
         </View>
 
         {/* Shop Button */}
@@ -154,6 +166,32 @@ const styles = StyleSheet.create({
   },
   topRight: {
     position: 'absolute',
+    top: 50,
+    right: 20,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    backgroundColor: '#00000088',
+    borderRadius: 20,
+    padding: 10,
+  },
+  usernameText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  logoutButton: {
+    backgroundColor: '#ff4444',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+  },
+  logoutText: {
+    color: 'white',
+    fontSize: 12,
+  },
+  currencyContainer: {
+    position: 'absolute',
     top: 120,
     right: 20,
     flexDirection: 'row',
@@ -251,7 +289,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   closeText: {
-    color: 'skyblue',
-    fontWeight: 'bold',
+    color: 'white',
+    fontSize: 14,
   },
 });

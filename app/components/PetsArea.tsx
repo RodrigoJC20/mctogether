@@ -30,7 +30,7 @@ interface PetState extends Pet {
 }
 
 interface PetsAreaProps {
-  myPet: Pet;
+  myPet: Pet | null;
   friendPets?: Pet[];
   showDebugPerimeter?: boolean; // Toggle to show/hide debug perimeter
 }
@@ -41,7 +41,7 @@ const PetsArea: React.FC<PetsAreaProps> = ({
   showDebugPerimeter = true // Default to showing the perimeter for debugging
 }) => {
   // Memoize allPets to prevent recreation on every render
-  const allPets = useMemo(() => [myPet, ...friendPets], [myPet, friendPets]);
+  const allPets = useMemo(() => myPet ? [myPet, ...friendPets] : friendPets, [myPet, friendPets]);
   
   // Track the position and movement of each pet
   const [pets, setPets] = useState<PetState[]>(() => 
