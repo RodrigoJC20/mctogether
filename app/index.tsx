@@ -1,14 +1,32 @@
+import React from 'react';
 import { View, ImageBackground, StyleSheet, Image, TouchableOpacity, Text, Modal } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { useGroup } from './hooks/useGroup';
+import { QRCode } from './components/QRCode';
 
 export default function Home() {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
+  const [showQR, setShowQR] = useState(false);
+  const { loading, error, groupId, createGroup, joinGroup } = useGroup();
+
+  const handleCreateParty = async () => {
+    try {
+      await createGroup(1); // Hardcoded user ID 1
+      setShowQR(true);
+    } catch (err) {
+      console.error('Failed to create party:', err);
+    }
+  };
+
+  const handleJoinParty = () => {
+    setShowQR(true);
+  };
 
   return (
-    <ImageBackground source={require('../assets/bg.jpeg')} style={styles.background}>
+    <ImageBackground source={require('../assets/images/bg.jpeg')} style={styles.background}>
       {/* Currency */}
       <View style={styles.topRight}>
         <FontAwesome5 name="coins" size={20} color="white" />
@@ -22,7 +40,7 @@ export default function Home() {
 
       {/* Pet Image */}
       <View style={styles.petContainer}>
-        <Image source={require('../assets/pet.png')} style={styles.petImage} />
+        <Image source={require('../assets/images/pet.png')} style={styles.petImage} />
       </View>
 
       {/* Medals Button */}
@@ -44,8 +62,39 @@ export default function Home() {
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalText}>🎉 Party Time! 🎉</Text>
-            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+            {!showQR ? (
+              <>
+                <Text style={styles.modalText}>🎉 Party Time! 🎉</Text>
+                <TouchableOpacity 
+                  style={styles.modalButton} 
+                  onPress={handleCreateParty}
+                  disabled={loading}
+                >
+                  <Text style={styles.buttonText}>Create Party</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.modalButton} 
+                  onPress={handleJoinParty}
+                  disabled={loading}
+                >
+                  <Text style={styles.buttonText}>Join Party</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={styles.modalText}>
+                  {groupId ? 'Scan this QR code to join!' : 'Scan a QR code to join a party!'}
+                </Text>
+                <QRCode groupId={groupId || ''} />
+              </>
+            )}
+            <TouchableOpacity 
+              onPress={() => {
+                setModalVisible(false);
+                setShowQR(false);
+              }} 
+              style={styles.closeButton}
+            >
               <Text style={styles.closeText}>Close</Text>
             </TouchableOpacity>
           </View>
@@ -132,11 +181,27 @@ const styles = StyleSheet.create({
     padding: 30,
     borderRadius: 25,
     alignItems: 'center',
+    width: '80%',
   },
   modalText: {
     color: 'white',
     fontSize: 22,
     fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  modalButton: {
+    backgroundColor: 'skyblue',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+    marginVertical: 10,
+    width: '100%',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   closeButton: {
     marginTop: 15,
