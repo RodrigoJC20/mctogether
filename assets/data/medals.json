@@ -1,0 +1,70 @@
+{
+  "medals": [
+    {
+      "id": "1",
+      "name": "First Steps",
+      "image": "first-steps.png",
+      "description": "Complete your first task",
+      "earned": true,
+      "requirements": {
+        "type": "task_completion",
+        "count": 1
+      }
+    },
+    {
+      "id": "2",
+      "name": "Social Butterfly",
+      "image": "social-butterfly.png",
+      "description": "Join your first group",
+      "earned": true,
+      "requirements": {
+        "type": "group_join",
+        "count": 1
+      }
+    },
+    {
+      "id": "3",
+      "name": "Task Master",
+      "image": "task-master.png",
+      "description": "Complete 10 tasks",
+      "earned": false,
+      "requirements": {
+        "type": "task_completion",
+        "count": 10
+      }
+    },
+    {
+      "id": "4",
+      "name": "Group Leader",
+      "image": "group-leader.png",
+      "description": "Create your first group",
+      "earned": false,
+      "requirements": {
+        "type": "group_creation",
+        "count": 1
+      }
+    },
+    {
+      "id": "5",
+      "name": "Team Player",
+      "image": "team-player.png",
+      "description": "Complete 5 tasks in a group",
+      "earned": false,
+      "requirements": {
+        "type": "group_task_completion",
+        "count": 5
+      }
+    },
+    {
+      "id": "6",
+      "name": "Early Bird",
+      "image": "early-bird.png",
+      "description": "Complete a task before 9 AM",
+      "earned": false,
+      "requirements": {
+        "type": "time_based",
+        "time": "09:00"
+      }
+    }
+  ]
+} 
