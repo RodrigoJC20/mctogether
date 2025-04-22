@@ -63,6 +63,11 @@ export default function Home() {
           <Text style={styles.currencyText}>{user?.currency || 0}</Text>
         </View>
 
+        {/* Menu Button */}
+        <TouchableOpacity style={styles.menuButton} onPress={() => router.push('/menu')}>
+          <MaterialIcons name="restaurant-menu" size={24} color="white" />
+        </TouchableOpacity>
+
         {/* Shop Button */}
         <TouchableOpacity style={styles.topLeftButton} onPress={() => router.push('/shop')}>
           <FontAwesome5 name="shopping-bag" size={24} color="white" />
@@ -291,5 +296,13 @@ const styles = StyleSheet.create({
   closeText: {
     color: 'white',
     fontSize: 14,
+  },
+  menuButton: {
+    position: 'absolute',
+    top: 120,
+    left: 80, // Position it to the right of the shop button
+    backgroundColor: '#00000088',
+    borderRadius: 20,
+    padding: 10,
   },
 });

@@ -42,8 +42,6 @@ export default function Medals() {
           </View>
         )}
       </View>
-      <Text style={styles.medalName}>{medal.name}</Text>
-      <Text style={styles.medalDescription}>{medal.description}</Text>
       <Text style={styles.requirementText}>
         {formatRequirement(medal.requirements)}
       </Text>
@@ -182,7 +180,7 @@ const styles = StyleSheet.create({
   medalImageContainer: {
     width: 80,
     height: 80,
-    marginBottom: 10,
+    marginBottom: 5,
     position: 'relative',
   },
   medalImage: {
@@ -202,19 +200,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.3)',
-  },
-  medalName: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  medalDescription: {
-    color: '#888',
-    fontSize: 12,
-    textAlign: 'center',
-    marginBottom: 5,
   },
   requirementText: {
     color: '#666',
