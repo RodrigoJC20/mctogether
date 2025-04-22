@@ -1,144 +1,19 @@
-import React, { useState } from 'react';
-import { View, ImageBackground, StyleSheet, TouchableOpacity, Text, Modal, ScrollView, Alert, ImageSourcePropType } from 'react-native';
+import React from 'react';
+import { View, ImageBackground, StyleSheet, TouchableOpacity, Text, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
-import { useGroup } from './hooks/useGroup';
 import { QRCodeComponent } from './components/QRCode';
-import { groupApi } from './api/client';
+import { UserSelector } from './components/UserSelector';
 import PetsArea from './components/PetsArea';
-
-interface Pet {
-  id: string | number;
-  image: ImageSourcePropType;
-}
+import { useUIState } from './hooks/useUIState';
+import { useQRCode } from './hooks/useQRCode';
+import { usePets } from './hooks/usePets';
 
 export default function Home() {
   const router = useRouter();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [showQR, setShowQR] = useState(false);
-  const [mode, setMode] = useState<'scan' | 'display'>('display');
-  const [currentUserId, setCurrentUserId] = useState(1);
-  const [showDebugPerimeter, setShowDebugPerimeter] = useState<boolean>(true);
-
-  const { loading, error, groupId, createGroup, joinGroup } = useGroup();
-
-  // Pet data - you would normally get this from your state/backend
-  const myPet: Pet = {
-    id: 'my-pet-1',
-    image: require('../assets/images/pet.png')
-  };
-  
-  // Mock data for friend pets (for demonstration)
-  const friendPets: Pet[] = [
-    // This will be populated when friends join your party
-    // Example: { id: 'friend-pet-1', image: require('../assets/images/friend-pet.png') }
-  ];
-
-  const handleCreateParty = async () => {
-    try {
-      await createGroup(currentUserId);
-      setMode('display');
-      setShowQR(true);
-    } catch (err) {
-      console.error('Failed to create party:', err);
-    }
-  };
-
-  const handleJoinParty = () => {
-    setMode('scan');
-    setShowQR(true);
-  };
-
-  const handleQRScanned = async (data: string) => {
-    try {
-      // Get the group info first to check if the group is active
-      const group = await groupApi.getGroup(data);
-      
-      if (group.status === 'disbanded') {
-        Alert.alert(
-          'Group Disbanded',
-          'This group has been disbanded. Would you like to create a new group?',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-            {
-              text: 'Create New Group',
-              onPress: handleCreateParty,
-            },
-          ]
-        );
-        return;
-      }
-
-      if (group.leaderId === currentUserId) {
-        Alert.alert('Error', 'You cannot join your own group!');
-        return;
-      }
-      
-      await joinGroup(data, currentUserId);
-      setShowQR(false);
-      setModalVisible(false);
-    } catch (err: any) {
-      console.error('Failed to join party:', err);
-      if (err.response?.data?.message === 'Group is not active') {
-        Alert.alert(
-          'Group Not Active',
-          'This group is no longer active. Would you like to create a new group?',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-            {
-              text: 'Create New Group',
-              onPress: handleCreateParty,
-            },
-          ]
-        );
-      } else {
-        Alert.alert('Error', 'Failed to join the group. Please try again.');
-      }
-    }
-  };
-
-  // Toggle debug perimeter visibility
-  const toggleDebugPerimeter = () => {
-    setShowDebugPerimeter(prev => !prev);
-  };
-
-  const renderUserSelector = () => (
-    <ScrollView 
-      horizontal 
-      style={styles.userSelectorContainer}
-      contentContainerStyle={styles.userSelectorContent}
-      showsHorizontalScrollIndicator={false}
-    >
-      {[1, 2, 3, 4, 5].map((userId) => (
-        <TouchableOpacity
-          key={userId}
-          style={[
-            styles.userButton,
-            currentUserId === userId && styles.userButtonActive
-          ]}
-          onPress={() => setCurrentUserId(userId)}
-        >
-          <FontAwesome5 
-            name="user" 
-            size={16} 
-            color={currentUserId === userId ? 'white' : '#666'} 
-          />
-          <Text style={[
-            styles.userButtonText,
-            currentUserId === userId && styles.userButtonTextActive
-          ]}>
-            User {userId}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
+  const { modalVisible, setModalVisible, currentUserId, setCurrentUserId } = useUIState();
+  const { showQR, setShowQR, mode, loading, error, groupId, handleCreateParty, handleJoinParty, handleQRScanned } = useQRCode(currentUserId);
+  const { myPet, friendPets, showDebugPerimeter, toggleDebugPerimeter } = usePets();
 
   return (
     <ImageBackground source={require('../assets/images/bg.jpeg')} style={styles.background}>
@@ -151,7 +26,10 @@ export default function Home() {
       
       {/* UI Elements - These will always be on top */}
       <View style={styles.uiLayer}>
-        {renderUserSelector()}
+        <UserSelector 
+          currentUserId={currentUserId}
+          onSelectUser={setCurrentUserId}
+        />
         
         {/* Currency */}
         <View style={styles.topRight}>
@@ -252,45 +130,9 @@ const styles = StyleSheet.create({
     height: '100%',
     zIndex: 2, // Higher than pets layer
   },
-  userSelectorContainer: {
-    position: 'absolute',
-    top: 50,  // Moved down to avoid notch
-    left: 0,
-    right: 0,
-    zIndex: 1,
-    paddingVertical: 10,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  userSelectorContent: {
-    paddingHorizontal: 10,
-    gap: 10,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  userButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#222',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    marginHorizontal: 5,
-    gap: 6,
-  },
-  userButtonActive: {
-    backgroundColor: 'skyblue',
-  },
-  userButtonText: {
-    color: '#666',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  userButtonTextActive: {
-    color: 'white',
-  },
   topLeftButton: {
     position: 'absolute',
-    top: 120,  // Adjusted to account for new user selector position
+    top: 120,
     left: 20,
     backgroundColor: '#00000088',
     borderRadius: 20,
@@ -298,7 +140,7 @@ const styles = StyleSheet.create({
   },
   topRight: {
     position: 'absolute',
-    top: 120,  // Adjusted to account for new user selector position
+    top: 120,
     right: 20,
     flexDirection: 'row',
     alignItems: 'center',
