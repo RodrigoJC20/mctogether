@@ -4,17 +4,19 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { useGroup } from './hooks/useGroup';
-import { QRCode } from './components/QRCode';
+import { QRCodeComponent } from './components/QRCode';
 
 export default function Home() {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [mode, setMode] = useState<'scan' | 'display'>('display');
   const { loading, error, groupId, createGroup, joinGroup } = useGroup();
 
   const handleCreateParty = async () => {
     try {
       await createGroup(1); // Hardcoded user ID 1
+      setMode('display');
       setShowQR(true);
     } catch (err) {
       console.error('Failed to create party:', err);
@@ -22,7 +24,18 @@ export default function Home() {
   };
 
   const handleJoinParty = () => {
+    setMode('scan');
     setShowQR(true);
+  };
+
+  const handleQRScanned = async (data: string) => {
+    try {
+      await joinGroup(data, 1); // Hardcoded user ID 1
+      setShowQR(false);
+      setModalVisible(false);
+    } catch (err) {
+      console.error('Failed to join party:', err);
+    }
   };
 
   return (
@@ -83,15 +96,20 @@ export default function Home() {
             ) : (
               <>
                 <Text style={styles.modalText}>
-                  {groupId ? 'Scan this QR code to join!' : 'Scan a QR code to join a party!'}
+                  {mode === 'display' ? 'Share this QR code!' : 'Scan a QR code to join!'}
                 </Text>
-                <QRCode groupId={groupId || ''} />
+                <QRCodeComponent 
+                  mode={mode}
+                  groupId={groupId || undefined}
+                  onScan={handleQRScanned}
+                />
               </>
             )}
             <TouchableOpacity 
               onPress={() => {
                 setModalVisible(false);
                 setShowQR(false);
+                setMode('display');
               }} 
               style={styles.closeButton}
             >
