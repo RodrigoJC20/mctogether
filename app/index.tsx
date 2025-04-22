@@ -45,6 +45,7 @@ export default function Home() {
   };
 
   const handleJoinParty = () => {
+    setMode('scan');
     setShowQR(true);
   };
 
@@ -216,7 +217,11 @@ export default function Home() {
                 <Text style={styles.modalText}>
                   {groupId ? 'Scan this QR code to join!' : 'Scan a QR code to join a party!'}
                 </Text>
-                <QRCodeComponent groupId={groupId || ''} mode="display" />
+                <QRCodeComponent 
+                  groupId={groupId || ''} 
+                  mode={mode}
+                  onScan={handleQRScanned}
+                />
               </>
             )}
             <TouchableOpacity 
