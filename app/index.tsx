@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, ImageBackground, StyleSheet, TouchableOpacity, Text, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
@@ -14,6 +14,20 @@ export default function Home() {
   const { modalVisible, setModalVisible, currentUserId, setCurrentUserId } = useUIState();
   const { showQR, setShowQR, mode, loading, error, groupId, members, handleCreateParty, handleJoinParty, handleQRScanned } = useQRCode(currentUserId);
   const { myPet, friendPets, showDebugPerimeter, toggleDebugPerimeter } = usePets(groupId, currentUserId, members);
+
+  // Close modal when joining a group (but not when creating one)
+  useEffect(() => {
+    if (groupId && modalVisible && mode === 'scan') {
+      setModalVisible(false);
+    }
+  }, [groupId, modalVisible, mode]);
+
+  const handleQRScannedWrapper = async (data: string) => {
+    const success = await handleQRScanned(data);
+    if (success) {
+      setModalVisible(false); // Close the main party menu modal
+    }
+  };
 
   return (
     <ImageBackground source={require('../assets/images/bg.jpeg')} style={styles.background}>
@@ -98,7 +112,7 @@ export default function Home() {
                 <QRCodeComponent 
                   groupId={groupId || ''} 
                   mode={mode}
-                  onScan={handleQRScanned}
+                  onScan={handleQRScannedWrapper}
                 />
               </>
             )}

@@ -53,6 +53,8 @@ export const useQRCode = (currentUserId: number) => {
       
       await joinGroup(data, currentUserId);
       setShowQR(false);
+      setMode('display');
+      return true; // Indicate successful join
     } catch (err: any) {
       console.error('Failed to join party:', err);
       if (err.response?.data?.message === 'Group is not active') {
@@ -73,6 +75,7 @@ export const useQRCode = (currentUserId: number) => {
       } else {
         Alert.alert('Error', 'Failed to join the group. Please try again.');
       }
+      return false; // Indicate failed join
     }
   };
 
