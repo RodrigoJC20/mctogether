@@ -1,25 +1,31 @@
 import { useState } from 'react';
-import { ImageSourcePropType } from 'react-native';
 
 interface Pet {
-  id: string | number;
-  image: ImageSourcePropType;
+  id: string;
+  image: any;
 }
 
-export const usePets = () => {
+interface GroupMember {
+  userId: number;
+  role: 'leader' | 'member';
+}
+
+export const usePets = (groupId: string | null, currentUserId: number, members: GroupMember[]) => {
   const [showDebugPerimeter, setShowDebugPerimeter] = useState<boolean>(true);
 
   // Pet data - you would normally get this from your state/backend
   const myPet: Pet = {
-    id: 'my-pet-1',
+    id: `pet-${currentUserId}`,
     image: require('../../assets/images/pet.png')
   };
   
-  // Mock data for friend pets (for demonstration)
-  const friendPets: Pet[] = [
-    // This will be populated when friends join your party
-    // Example: { id: 'friend-pet-1', image: require('../../assets/images/friend-pet.png') }
-  ];
+  // Create friend pets based on group members, excluding current user
+  const friendPets: Pet[] = members
+    .filter(member => member.userId !== currentUserId)
+    .map(member => ({
+      id: `pet-${member.userId}`,
+      image: require('../../assets/images/pet.png')
+    }));
 
   const toggleDebugPerimeter = () => {
     setShowDebugPerimeter(prev => !prev);

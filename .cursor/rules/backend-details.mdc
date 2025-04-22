@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+The backend is defined at [API.md](mdc:API.md), for the contracts and detailes like that. We manage the backend url on [app.json](mdc:app.json).

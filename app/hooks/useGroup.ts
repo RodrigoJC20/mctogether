@@ -1,10 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { groupApi } from '../api/client';
 
-export const useGroup = () => {
+interface GroupMember {
+  userId: number;
+  role: 'leader' | 'member';
+}
+
+export const useGroup = (currentUserId: number) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [groupId, setGroupId] = useState<string | null>(null);
+  const [members, setMembers] = useState<GroupMember[]>([]);
+
+  const fetchGroupMembers = useCallback(async () => {
+    if (!groupId) return;
+    
+    try {
+      const group = await groupApi.getGroup(groupId);
+      // Include all members, including the current user
+      const allMembers = group.members
+        .map((userId: number) => ({
+          userId,
+          role: userId === group.leaderId ? 'leader' : 'member'
+        }));
+      
+      setMembers(allMembers);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching group members:', err);
+      setError('Failed to sync group members');
+    }
+  }, [groupId, currentUserId]);
+
+  // Set up polling for group members
+  useEffect(() => {
+    if (!groupId) {
+      setMembers([]);
+      return;
+    }
+
+    // Initial fetch
+    fetchGroupMembers();
+
+    // Set up polling interval
+    const interval = setInterval(fetchGroupMembers, 5000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [groupId, fetchGroupMembers]);
 
   const leaveCurrentGroup = async (userId: number) => {
     try {
@@ -19,6 +63,7 @@ export const useGroup = () => {
         }
       }
       setGroupId(null);
+      setMembers([]);
     } catch (err) {
       console.error('useGroup: Error leaving group:', err);
       throw err;
@@ -103,6 +148,7 @@ export const useGroup = () => {
     loading,
     error,
     groupId,
+    members,
     createGroup,
     joinGroup,
     leaveCurrentGroup,

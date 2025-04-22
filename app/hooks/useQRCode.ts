@@ -6,7 +6,7 @@ import { useGroup } from './useGroup';
 export const useQRCode = (currentUserId: number) => {
   const [showQR, setShowQR] = useState(false);
   const [mode, setMode] = useState<'scan' | 'display'>('display');
-  const { loading, error, groupId, createGroup, joinGroup } = useGroup();
+  const { loading, error, groupId, members, createGroup, joinGroup } = useGroup(currentUserId);
 
   const handleCreateParty = async () => {
     try {
@@ -84,6 +84,7 @@ export const useQRCode = (currentUserId: number) => {
     loading,
     error,
     groupId,
+    members,
     handleCreateParty,
     handleJoinParty,
     handleQRScanned,

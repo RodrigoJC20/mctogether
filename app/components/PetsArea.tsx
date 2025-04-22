@@ -1,5 +1,5 @@
 // components/PetsArea.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Image, StyleSheet, Dimensions, ImageSourcePropType, Animated, Easing, Text } from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -40,8 +40,8 @@ const PetsArea: React.FC<PetsAreaProps> = ({
   friendPets = [],
   showDebugPerimeter = true // Default to showing the perimeter for debugging
 }) => {
-  // Combine my pet with friend pets for unified handling
-  const allPets = [myPet, ...friendPets];
+  // Memoize allPets to prevent recreation on every render
+  const allPets = useMemo(() => [myPet, ...friendPets], [myPet, friendPets]);
   
   // Track the position and movement of each pet
   const [pets, setPets] = useState<PetState[]>(() => 
@@ -60,30 +60,71 @@ const PetsArea: React.FC<PetsAreaProps> = ({
   
   // Animation frame reference for smooth movement
   const animationRef = useRef<number | null>(null);
+  const petsRef = useRef(pets);
+  
+  // Update pets ref when pets state changes
+  useEffect(() => {
+    petsRef.current = pets;
+  }, [pets]);
+  
+  // Update pets when allPets changes
+  useEffect(() => {
+    // Get current pets' state
+    const currentPetsState = petsRef.current.reduce((acc, pet) => {
+      acc[pet.id] = {
+        x: pet.x,
+        y: pet.y,
+        direction: pet.direction,
+        speed: pet.speed,
+        isMoving: pet.isMoving,
+        walkValue: pet.walkValue,
+      };
+      return acc;
+    }, {} as Record<string | number, Omit<PetState, 'id' | 'image' | 'moveTimeout'>>);
+
+    // Update pets array with new pets while preserving state for existing pets
+    setPets(allPets.map(pet => ({
+      id: pet.id,
+      image: pet.image,
+      x: currentPetsState[pet.id]?.x ?? SCREEN_WIDTH / 2 - 50,
+      y: currentPetsState[pet.id]?.y ?? SCREEN_HEIGHT / 2 - 50,
+      direction: currentPetsState[pet.id]?.direction ?? Math.random() * 2 * Math.PI,
+      speed: currentPetsState[pet.id]?.speed ?? 0.5 + Math.random() * 1.5,
+      moveTimeout: null,
+      isMoving: currentPetsState[pet.id]?.isMoving ?? false,
+      walkValue: currentPetsState[pet.id]?.walkValue ?? new Animated.Value(0)
+    })));
+  }, [allPets]);
   
   // Initialize pet movement
   useEffect(() => {
+    let mounted = true;
+    
     // Start movement loop for each pet
-    pets.forEach((_, index) => {
-      startMovement(index);
+    petsRef.current.forEach((_, index) => {
+      if (mounted) {
+        startMovement(index);
+      }
     });
     
     // Start animation frame loop
     startAnimationLoop();
     
     return () => {
+      mounted = false;
       // Cleanup on unmount
-      pets.forEach(pet => {
+      petsRef.current.forEach(pet => {
         if (pet.moveTimeout) clearTimeout(pet.moveTimeout);
+        pet.walkValue.stopAnimation();
       });
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [allPets]); // Re-initialize when pets change
   
   // Start the walking animation for a specific pet
-  const startWalkingAnimation = (index: number) => {
-    const pet = pets[index];
+  const startWalkingAnimation = useCallback((index: number) => {
+    const pet = petsRef.current[index];
+    if (!pet) return;
     
     // Stop any existing animations
     pet.walkValue.stopAnimation();
@@ -108,11 +149,12 @@ const PetsArea: React.FC<PetsAreaProps> = ({
         })
       ])
     ).start();
-  };
+  }, []);
   
   // Stop the walking animation for a specific pet
-  const stopWalkingAnimation = (index: number) => {
-    const pet = pets[index];
+  const stopWalkingAnimation = useCallback((index: number) => {
+    const pet = petsRef.current[index];
+    if (!pet) return;
     
     // Animate back to 0 (neutral position)
     Animated.timing(pet.walkValue, {
@@ -121,58 +163,70 @@ const PetsArea: React.FC<PetsAreaProps> = ({
       easing: Easing.linear,
       useNativeDriver: true
     }).start();
-  };
+  }, []);
   
-  const startAnimationLoop = () => {
+  const startAnimationLoop = useCallback(() => {
+    let lastUpdate = Date.now();
+    const FPS = 60;
+    const frameInterval = 1000 / FPS;
+    
     const updatePositions = () => {
-      setPets(currentPets => 
-        currentPets.map(pet => {
-          if (!pet.isMoving) return pet;
-          
-          // Calculate new position
-          let newX = pet.x + Math.cos(pet.direction) * pet.speed;
-          let newY = pet.y + Math.sin(pet.direction) * pet.speed;
-          
-          // Boundary checks
-          if (newX < BOUNDARIES.left) {
-            newX = BOUNDARIES.left;
-            pet.direction = Math.PI - pet.direction;
-          } else if (newX > SCREEN_WIDTH - BOUNDARIES.right - 100) {
-            newX = SCREEN_WIDTH - BOUNDARIES.right - 100;
-            pet.direction = Math.PI - pet.direction;
-          }
-          
-          if (newY < BOUNDARIES.top) {
-            newY = BOUNDARIES.top;
-            pet.direction = 2 * Math.PI - pet.direction;
-          } else if (newY > SCREEN_HEIGHT - BOUNDARIES.bottom - 100) {
-            newY = SCREEN_HEIGHT - BOUNDARIES.bottom - 100;
-            pet.direction = 2 * Math.PI - pet.direction;
-          }
-          
-          return { ...pet, x: newX, y: newY };
-        })
-      );
+      const now = Date.now();
+      const delta = now - lastUpdate;
+      
+      if (delta > frameInterval) {
+        setPets(currentPets => 
+          currentPets.map(pet => {
+            if (!pet.isMoving) return pet;
+            
+            // Calculate new position
+            let newX = pet.x + Math.cos(pet.direction) * pet.speed;
+            let newY = pet.y + Math.sin(pet.direction) * pet.speed;
+            
+            // Boundary checks
+            if (newX < BOUNDARIES.left) {
+              newX = BOUNDARIES.left;
+              pet.direction = Math.PI - pet.direction;
+            } else if (newX > SCREEN_WIDTH - BOUNDARIES.right - 100) {
+              newX = SCREEN_WIDTH - BOUNDARIES.right - 100;
+              pet.direction = Math.PI - pet.direction;
+            }
+            
+            if (newY < BOUNDARIES.top) {
+              newY = BOUNDARIES.top;
+              pet.direction = 2 * Math.PI - pet.direction;
+            } else if (newY > SCREEN_HEIGHT - BOUNDARIES.bottom - 100) {
+              newY = SCREEN_HEIGHT - BOUNDARIES.bottom - 100;
+              pet.direction = 2 * Math.PI - pet.direction;
+            }
+            
+            return { ...pet, x: newX, y: newY };
+          })
+        );
+        lastUpdate = now;
+      }
       
       animationRef.current = requestAnimationFrame(updatePositions);
     };
     
     animationRef.current = requestAnimationFrame(updatePositions);
-  };
+  }, []);
   
-  const startMovement = (petIndex: number) => {
+  const startMovement = useCallback((petIndex: number) => {
     const moveDuration = 2000 + Math.random() * 5000; // Move for 2-7 seconds
     const pauseDuration = 1000 + Math.random() * 3000; // Pause for 1-4 seconds
     
     // Start moving
     setPets(currentPets => {
       const newPets = [...currentPets];
-      newPets[petIndex] = {
-        ...newPets[petIndex],
-        isMoving: true,
-        direction: Math.random() * 2 * Math.PI,
-        speed: 0.5 + Math.random() * 1.5,
-      };
+      if (newPets[petIndex]) {
+        newPets[petIndex] = {
+          ...newPets[petIndex],
+          isMoving: true,
+          direction: Math.random() * 2 * Math.PI,
+          speed: 0.5 + Math.random() * 1.5,
+        };
+      }
       return newPets;
     });
     
@@ -184,10 +238,12 @@ const PetsArea: React.FC<PetsAreaProps> = ({
       // Stop moving
       setPets(currentPets => {
         const newPets = [...currentPets];
-        newPets[petIndex] = {
-          ...newPets[petIndex],
-          isMoving: false,
-        };
+        if (newPets[petIndex]) {
+          newPets[petIndex] = {
+            ...newPets[petIndex],
+            isMoving: false,
+          };
+        }
         return newPets;
       });
       
@@ -202,10 +258,12 @@ const PetsArea: React.FC<PetsAreaProps> = ({
       // Update timeout reference
       setPets(currentPets => {
         const newPets = [...currentPets];
-        newPets[petIndex] = {
-          ...newPets[petIndex],
-          moveTimeout: pauseTimeout,
-        };
+        if (newPets[petIndex]) {
+          newPets[petIndex] = {
+            ...newPets[petIndex],
+            moveTimeout: pauseTimeout,
+          };
+        }
         return newPets;
       });
     }, moveDuration);
@@ -213,22 +271,24 @@ const PetsArea: React.FC<PetsAreaProps> = ({
     // Update timeout reference
     setPets(currentPets => {
       const newPets = [...currentPets];
-      newPets[petIndex] = {
-        ...newPets[petIndex],
-        moveTimeout: moveTimeout,
-      };
+      if (newPets[petIndex]) {
+        newPets[petIndex] = {
+          ...newPets[petIndex],
+          moveTimeout: moveTimeout,
+        };
+      }
       return newPets;
     });
-  };
-  
+  }, [startWalkingAnimation, stopWalkingAnimation]);
+
   // Calculate perimeter dimensions based on boundaries
-  const perimeterStyle = {
+  const perimeterStyle = useMemo(() => ({
     top: BOUNDARIES.top,
     left: BOUNDARIES.left,
     width: SCREEN_WIDTH - BOUNDARIES.left - BOUNDARIES.right,
     height: SCREEN_HEIGHT - BOUNDARIES.top - BOUNDARIES.bottom,
-  };
-  
+  }), []);
+
   return (
     <View style={styles.container}>
       {/* Debug perimeter to show boundaries */}
@@ -306,4 +366,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default PetsArea;
+export default React.memo(PetsArea);
