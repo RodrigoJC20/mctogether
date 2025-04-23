@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import { useAuth } from './useAuth';
 import { fetchWithAuth } from '../api/authApi';
 import Constants from 'expo-constants';
+import { groupApi } from '../api/client';
 
 const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://localhost:3000';
 
@@ -15,10 +16,21 @@ export const useQRCode = () => {
   const [members, setMembers] = useState<string[]>([]);
   const { user, token } = useAuth();
 
+  const fetchGroupMembers = async (gId: string) => {
+    try {
+      if (!token) return;
+      const group = await groupApi.getGroup(gId);
+      setMembers(group.members || []);
+    } catch (err) {
+      console.error('Failed to fetch group members:', err);
+    }
+  };
+
   // Effect to sync with user's group status
   useEffect(() => {
     if (user?.groupId) {
       setGroupId(user.groupId);
+      fetchGroupMembers(user.groupId);
     } else {
       // Clear state when user has no group
       setGroupId(null);
@@ -27,6 +39,13 @@ export const useQRCode = () => {
       setMode('display');
     }
   }, [user?.groupId]);
+
+  const handlePartyButton = async () => {
+    if (user?.groupId) {
+      await fetchGroupMembers(user.groupId);
+    }
+    setShowQR(true);
+  };
 
   const handleCreateParty = async () => {
     try {
@@ -132,6 +151,10 @@ export const useQRCode = () => {
       console.log('Party creation response:', response);
       setGroupId(response._id);
       setMembers(response.members);
+      
+      // Fetch latest members to ensure we have up-to-date data
+      await fetchGroupMembers(response._id);
+      
       setMode('display');
       setShowQR(true);
       return response; // Return the response for error handling
@@ -150,8 +173,8 @@ export const useQRCode = () => {
 
   const handleQRScanned = async (data: string) => {
     try {
-      if (!token) {
-        throw new Error('No authentication token available');
+      if (!token || !user) {
+        throw new Error('No authentication token or user available');
       }
       setLoading(true);
       setError(null);
@@ -183,12 +206,14 @@ export const useQRCode = () => {
       }
       
       // Join the group
-      const updatedGroup = await fetchWithAuth(`${API_BASE_URL}/groups/${data}/join`, token, {
-        method: 'POST',
-      });
+      const updatedGroup = await groupApi.joinGroup(data, user._id);
       
       setGroupId(updatedGroup._id);
       setMembers(updatedGroup.members);
+      
+      // Fetch latest members to ensure we have up-to-date data
+      await fetchGroupMembers(updatedGroup._id);
+      
       setShowQR(false);
       setMode('display');
       return true; // Indicate successful join
@@ -230,5 +255,6 @@ export const useQRCode = () => {
     handleCreateParty,
     handleJoinParty,
     handleQRScanned,
+    fetchGroupMembers,
   };
 }; 

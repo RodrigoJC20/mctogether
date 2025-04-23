@@ -61,7 +61,7 @@ export const groupApi = {
 
   joinGroup: async (groupId: string, userId: string) => {
     console.log('Joining group:', { groupId, userId });
-    const response = await apiClient.post(`/groups/${groupId}/join`, { userId });
+    const response = await apiClient.patch(`/groups/${groupId}/join`, { userId });
     return response.data;
   },
 

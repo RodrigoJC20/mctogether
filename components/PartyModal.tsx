@@ -14,7 +14,9 @@ interface PartyModalProps {
   showQR: boolean;
   onCreateParty: () => Promise<void>;
   onJoinParty: () => void;
+  onQRScanned: (data: string) => Promise<boolean>;
   loading: boolean;
+  mode: 'scan' | 'display';
 }
 
 export const PartyModal: React.FC<PartyModalProps> = ({
@@ -25,9 +27,11 @@ export const PartyModal: React.FC<PartyModalProps> = ({
   showQR,
   onCreateParty,
   onJoinParty,
-  loading
+  onQRScanned,
+  loading,
+  mode
 }) => {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { leaveCurrentGroup, loading: leaveLoading, fetchGroupMembers } = useGroup(user?._id || '');
   const [currentUser, setCurrentUser] = useState(user);
 
@@ -52,14 +56,6 @@ export const PartyModal: React.FC<PartyModalProps> = ({
     refreshUserInfo();
   }, [visible, user?._id, fetchGroupMembers]);
 
-  const handleLeaveParty = async () => {
-    if (user?._id) {
-      await leaveCurrentGroup(user._id);
-      setCurrentUser(null);
-      onClose();
-    }
-  };
-
   const handleCreateParty = async () => {
     try {
       await onCreateParty();
@@ -71,6 +67,14 @@ export const PartyModal: React.FC<PartyModalProps> = ({
       }
     } catch (err) {
       console.error('Error creating party:', err);
+    }
+  };
+
+  const handleLeaveParty = async () => {
+    if (user?._id) {
+      await leaveCurrentGroup(user._id);
+      setCurrentUser(null);
+      onClose();
     }
   };
 
@@ -107,6 +111,20 @@ export const PartyModal: React.FC<PartyModalProps> = ({
                 disabled={leaveLoading}
               >
                 <Text style={styles.buttonText}>Leave Party</Text>
+              </TouchableOpacity>
+            </>
+          ) : mode === 'scan' ? (
+            <>
+              <Text style={styles.modalText}>Scan QR Code</Text>
+              <QRCodeComponent 
+                mode="scan"
+                onScan={onQRScanned}
+              />
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]} 
+                onPress={() => onClose()}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
             </>
           ) : (
@@ -274,5 +292,8 @@ const styles = StyleSheet.create({
   memberText: {
     fontSize: 16,
     color: 'black',
+  },
+  cancelButton: {
+    backgroundColor: '#ff4444',
   },
 }); 
