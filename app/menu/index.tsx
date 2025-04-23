@@ -18,7 +18,7 @@ const FALLBACK_IMAGE = require('../../assets/images/menu/null.png');
 const getMenuImage = (imageName: string) => {
   const imageMap: { [key: string]: any } = {
     'bigmac': require('../../assets/images/menu/bigmac.png'),
-    //'mcfeast': require('../../assets/images/menu/bigmac.png'),
+    'mcfeast': require('../../assets/images/menu/mcfeast.png'),
     'mcchicken': require('../../assets/images/menu/mcchicken.png'),
     'mcfries': require('../../assets/images/menu/mcfries.png'),
   };
