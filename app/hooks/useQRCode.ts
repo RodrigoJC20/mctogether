@@ -17,7 +17,94 @@ export const useQRCode = () => {
 
   const handleCreateParty = async () => {
     try {
+      console.log('handleCreateParty called');
       if (!token) {
+        console.log('No token available');
+        throw new Error('No authentication token available');
+      }
+
+      // First check if user is already in a group by getting current state
+      console.log('Checking current user state');
+      const currentUser = await fetchWithAuth(`${API_BASE_URL}/auth/me`, token, {});
+      console.log('Current user state:', currentUser);
+
+      if (currentUser?.groupId) {
+        console.log('User is already in group:', currentUser.groupId);
+        Alert.alert(
+          'Leave Current Group?',
+          'You are already in a group. Would you like to leave it and create a new one?',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {
+              text: 'Leave & Create New',
+              onPress: async () => {
+                try {
+                  console.log('User confirmed leaving group');
+                  setLoading(true);
+
+                  // Leave the current group using the correct endpoint
+                  console.log('Making DELETE request to:', `${API_BASE_URL}/groups/${currentUser.groupId}`);
+                  await fetchWithAuth(`${API_BASE_URL}/groups/${currentUser.groupId}`, token, {
+                    method: 'DELETE',
+                  });
+                  console.log('Successfully left group');
+
+                  // Clear local state
+                  setGroupId(null);
+                  setMembers([]);
+
+                  // Now create a new group
+                  console.log('Creating new group after leaving');
+                  try {
+                    await createNewGroup();
+                    console.log('Successfully created new group after leaving');
+                  } catch (createErr) {
+                    console.error('Failed to create new group after leaving:', createErr);
+                    Alert.alert('Error', 'Failed to create new group after leaving. Please try again.');
+                  }
+                } catch (leaveErr) {
+                  console.error('Failed to leave group:', leaveErr);
+                  Alert.alert('Error', 'Failed to leave current group. Please try again.');
+                } finally {
+                  setLoading(false);
+                }
+              },
+            },
+          ]
+        );
+        return;
+      }
+
+      console.log('No existing group found, creating new one');
+      await createNewGroup();
+    } catch (err: any) {
+      console.error('Failed to create party:', err);
+      if (err.message?.includes('HTTP error! status: 400')) {
+        console.log('Received 400 error with message:', err.message);
+        Alert.alert(
+          'Error',
+          'Failed to create party. Please try again.',
+          [
+            {
+              text: 'OK',
+              style: 'cancel',
+            },
+          ]
+        );
+      } else {
+        setError('Failed to create party. Please try again.');
+      }
+    }
+  };
+
+  const createNewGroup = async () => {
+    try {
+      console.log('createNewGroup called');
+      if (!token) {
+        console.log('No token available in createNewGroup');
         throw new Error('No authentication token available');
       }
       setLoading(true);
@@ -34,9 +121,10 @@ export const useQRCode = () => {
       setMembers(response.members);
       setMode('display');
       setShowQR(true);
+      return response; // Return the response for error handling
     } catch (err) {
-      console.error('Failed to create party:', err);
-      setError('Failed to create party');
+      console.error('Failed to create party in createNewGroup:', err);
+      throw err; // Re-throw to be handled by the caller
     } finally {
       setLoading(false);
     }

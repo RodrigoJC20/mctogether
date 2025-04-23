@@ -13,7 +13,7 @@ export default function Home() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { modalVisible, setModalVisible } = useUIState();
-  const { showQR, setShowQR, mode, loading, error, groupId, members, handleCreateParty, handleJoinParty, handleQRScanned } = useQRCode();
+  const { showQR, setShowQR, mode, setMode, loading, error, groupId, members, handleCreateParty, handleJoinParty, handleQRScanned } = useQRCode();
   const { myPet, friendPets, showDebugPerimeter, toggleDebugPerimeter } = usePets(
     groupId || null, 
     user?._id || null, 
@@ -106,20 +106,34 @@ export default function Home() {
             {!showQR ? (
               <>
                 <Text style={styles.modalText}>🎉 Party Time! 🎉</Text>
-                <TouchableOpacity 
-                  style={styles.modalButton} 
-                  onPress={handleCreateParty}
-                  disabled={loading}
-                >
-                  <Text style={styles.buttonText}>Create Party</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.modalButton} 
-                  onPress={handleJoinParty}
-                  disabled={loading}
-                >
-                  <Text style={styles.buttonText}>Join Party</Text>
-                </TouchableOpacity>
+                {groupId ? (
+                  <TouchableOpacity 
+                    style={styles.modalButton} 
+                    onPress={() => {
+                      setMode('display');
+                      setShowQR(true);
+                    }}
+                  >
+                    <Text style={styles.buttonText}>View QR Code</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <>
+                    <TouchableOpacity 
+                      style={styles.modalButton} 
+                      onPress={handleCreateParty}
+                      disabled={loading}
+                    >
+                      <Text style={styles.buttonText}>Create Party</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={styles.modalButton} 
+                      onPress={handleJoinParty}
+                      disabled={loading}
+                    >
+                      <Text style={styles.buttonText}>Join Party</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
               </>
             ) : (
               <>
@@ -178,6 +192,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#00000088',
     borderRadius: 20,
     padding: 10,
+    marginBottom: 20,
   },
   usernameText: {
     color: 'white',
@@ -204,6 +219,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#00000088',
     borderRadius: 20,
     padding: 10,
+    marginTop: 20,
   },
   currencyText: {
     color: 'white',
