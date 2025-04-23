@@ -198,12 +198,14 @@ export default function Menu() {
 
       <TouchableOpacity 
         style={styles.cartButton}
-        onPress={() => {
-          // Save cart to AsyncStorage
-          AsyncStorage.setItem('cart', JSON.stringify(cart))
-            .then(() => console.log('Cart saved:', cart))
-            .catch(error => console.error('Error saving cart:', error));
-          // Navigate to order page
+        onPress={async () => {
+          try {
+            await AsyncStorage.setItem('cart', JSON.stringify(cart));
+            console.log('Cart saved:', cart);
+          } catch (error) {
+            console.error('Error saving cart:', error);
+          };
+          
           router.push({
             pathname: '/menu/order',
             params: { cart: JSON.stringify(cart) }

@@ -31,26 +31,7 @@ const getMenuImage = (imageName: string) => {
 export default function Order() {
   const router = useRouter();
   const { cart } = useLocalSearchParams<{ cart: string }>();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-
-  /*useEffect(() => {
-    const fetchCartItems = async () => {
-      try {
-        const storedCart = await AsyncStorage.getItem('cartItems');
-        if (storedCart) {
-          const parsedCart = JSON.parse(storedCart);
-          setCartItems(parsedCart);
-        } else if (cart) {
-          const parsedCart = JSON.parse(cart);
-          setCartItems(parsedCart);
-        }
-      } catch (error) {
-        console.error('Error fetching cart items:', error);
-      }
-    };
-
-    fetchCartItems();
-  }, []);*/
+  const cartItems: CartItem[] = cart ? JSON.parse(cart) : [];
 
   const calculateTotal = () => {
     return cartItems.reduce((total, item) => {
@@ -66,12 +47,6 @@ export default function Order() {
       <TouchableOpacity 
         style={styles.backButton}
         onPress={async () => {
-          try {
-            await AsyncStorage.setItem('cartItems', JSON.stringify(cartItems));
-            console.log('Cart items saved:', cartItems);
-          } catch (error) {
-            console.error('Error saving cart items:', error);
-          }
           router.back();
         }}
       >
