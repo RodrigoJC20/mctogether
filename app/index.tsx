@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, ImageBackground, StyleSheet, TouchableOpacity, Text, Modal } from 'react-native';
+import { View, ImageBackground, StyleSheet, TouchableOpacity, Text, Modal, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { QRCodeComponent } from './components/QRCode';
@@ -8,6 +8,7 @@ import { useUIState } from './hooks/useUIState';
 import { useQRCode } from './hooks/useQRCode';
 import { usePets } from './hooks/usePets';
 import { useAuth } from './hooks/useAuth';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Home() {
   const router = useRouter();
@@ -103,18 +104,39 @@ export default function Home() {
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
+            <TouchableOpacity 
+              style={styles.closeCrossButton}
+              onPress={() => {
+                setModalVisible(false);
+                setShowQR(false);
+              }}
+            >
+              <Text style={styles.closeCrossText}>×</Text>
+            </TouchableOpacity>
             {!showQR ? (
               <>
-                <Text style={styles.modalText}>🎉 Party Time! 🎉</Text>
+                <Text style={styles.modalText}>Party with your friends</Text>
+                <Image 
+                  source={require('../assets/images/modalParty.png')}
+                  style={styles.modalImage}
+                />
                 <TouchableOpacity 
-                  style={styles.modalButton} 
+                  style={[styles.modalButton, styles.createButton]} 
                   onPress={handleCreateParty}
                   disabled={loading}
                 >
-                  <Text style={styles.buttonText}>Create Party</Text>
+                  <View style={styles.buttonContent}>
+                    <Text style={styles.buttonText}>Create Party</Text>
+                    <Ionicons name="qr-code" size={20} color="black" style={styles.buttonIcon}/>
+                  </View>
                 </TouchableOpacity>
+                <View style={styles.orContainer}>
+                  <View style={styles.orLine} />
+                  <Text style={styles.orText}>OR</Text>
+                  <View style={styles.orLine} />
+                </View>
                 <TouchableOpacity 
-                  style={styles.modalButton} 
+                  style={[styles.modalButton, styles.joinButton]} 
                   onPress={handleJoinParty}
                   disabled={loading}
                 >
@@ -133,15 +155,6 @@ export default function Home() {
                 />
               </>
             )}
-            <TouchableOpacity 
-              onPress={() => {
-                setModalVisible(false);
-                setShowQR(false);
-              }} 
-              style={styles.closeButton}
-            >
-              <Text style={styles.closeText}>Close</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -255,47 +268,97 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: '#000000aa',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#222',
+    backgroundColor: '#f7f7f7',
     padding: 30,
-    borderRadius: 25,
     alignItems: 'center',
     width: '80%',
+    position: 'relative',
+    borderWidth: 3,
+    borderColor: '#DB0007',
   },
   modalText: {
-    color: 'white',
+    color: 'black',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
   },
   modalButton: {
-    backgroundColor: 'skyblue',
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 10,
     marginVertical: 10,
     width: '100%',
+    borderWidth: 2,
+    borderTopColor: 'rgba(255, 255, 255, 0.5)',
+    borderLeftColor: 'rgba(255, 255, 255, 0.5)',
+    borderRightColor: 'rgba(0, 0, 0, 0.2)',
+    borderBottomColor: 'rgba(0, 0, 0, 0.2)',
+    shadowColor: '#2d2d2d',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  createButton: {
+    backgroundColor: '#FFBC0D',
+  },
+  joinButton: {
+    backgroundColor: '#fff',
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonIcon: {
+    marginLeft: 10,
   },
   buttonText: {
-    color: 'white',
+    color: 'black',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  closeButton: {
-    marginTop: 15,
-    backgroundColor: '#444',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+  closeCrossButton: {
+    position: 'absolute',
+    top: -5,
+    right: -7.5,
+    padding: 5,
   },
-  closeText: {
-    color: 'white',
+  closeCrossText: {
+    color: 'black',
+    fontSize: 30,
+    fontWeight: 'bold',
+    width: 30,
+    height: 30,
+    textAlign: 'center',
+    lineHeight: 30,
+  },
+  orContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+    width: '100%',
+  },
+  orLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'black',
+    opacity: 0.5,
+  },
+  orText: {
+    color: 'black',
+    marginHorizontal: 10,
     fontSize: 14,
+    fontWeight: 'bold',
   },
   menuButton: {
     position: 'absolute',
@@ -304,5 +367,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#00000088',
     borderRadius: 20,
     padding: 10,
+  },
+  modalImage: {
+    width: 250,
+    height: 125,
+    resizeMode: 'contain',
+    marginVertical: 20,
   },
 });
