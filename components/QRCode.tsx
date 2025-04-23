@@ -36,8 +36,8 @@ export const QRCodeComponent = ({ groupId, mode, onScan }: QRCodeComponentProps)
         <QRCode
           value={groupId}
           size={250}
-          backgroundColor="transparent"
-          color="white"
+          backgroundColor="white"
+          color="black"
         />
       </View>
     );
