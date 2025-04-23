@@ -3,24 +3,24 @@
     {
       "id": "1",
       "name": "BigMac",
-      "price": 31.00,
+      "price": "31.00",
       "imageName": "bigmac"
     },
     {
       "id": "2",
       "name": "McFeast",
-      "price": 35.00,
+      "price": "35.00",
       "imageName": "mcfeast"
     },
     {
       "id": "3",
       "name": "McChicken",
-      "price": 25.00,
-      "imageName": "mccheicken"
+      "price": "25.00",
+      "imageName": "mcchicken"
     }, {
       "id": "4",
       "name": "McFries",
-      "price": 20.00,
+      "price": "20.00",
       "imageName": "mcfries"
     }
   ]
