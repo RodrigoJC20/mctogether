@@ -28,10 +28,13 @@ export default function Home() {
     }
   }, [groupId, modalVisible, mode]);
 
-  const handleQRScannedWrapper = async (data: string) => {
-    const success = await handleQRScanned(data);
-    if (success) {
-      setModalVisible(false);
+  const handleQRScannedWrapper = async (data: string): Promise<boolean> => {
+    try {
+      await handleQRScanned(data);
+      return true;
+    } catch (error) {
+      console.error('Error handling QR scan:', error);
+      return false;
     }
   };
 
@@ -117,13 +120,18 @@ export default function Home() {
         onClose={() => {
           setModalVisible(false);
           setShowQR(false);
+          setMode('display');
         }}
         groupId={groupId}
         members={members}
         showQR={showQR}
         onCreateParty={handleCreateParty}
-        onJoinParty={handleJoinParty}
+        onJoinParty={() => {
+          setMode('scan');
+        }}
+        onQRScanned={handleQRScannedWrapper}
         loading={loading}
+        mode={mode}
       />
     </ImageBackground>
   );

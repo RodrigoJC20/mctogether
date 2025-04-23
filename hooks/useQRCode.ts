@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import { useAuth } from './useAuth';
 import { fetchWithAuth } from '../api/authApi';
 import Constants from 'expo-constants';
+import { groupApi } from '../api/client';
 
 const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://localhost:3000';
 
@@ -150,8 +151,8 @@ export const useQRCode = () => {
 
   const handleQRScanned = async (data: string) => {
     try {
-      if (!token) {
-        throw new Error('No authentication token available');
+      if (!token || !user) {
+        throw new Error('No authentication token or user available');
       }
       setLoading(true);
       setError(null);
@@ -183,9 +184,7 @@ export const useQRCode = () => {
       }
       
       // Join the group
-      const updatedGroup = await fetchWithAuth(`${API_BASE_URL}/groups/${data}/join`, token, {
-        method: 'POST',
-      });
+      const updatedGroup = await groupApi.joinGroup(data, user._id);
       
       setGroupId(updatedGroup._id);
       setMembers(updatedGroup.members);
