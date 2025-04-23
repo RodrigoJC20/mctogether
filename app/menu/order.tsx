@@ -33,7 +33,7 @@ export default function Order() {
   const { cart } = useLocalSearchParams<{ cart: string }>();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     const fetchCartItems = async () => {
       try {
         const storedCart = await AsyncStorage.getItem('cartItems');
@@ -50,7 +50,7 @@ export default function Order() {
     };
 
     fetchCartItems();
-  }, [cart]);
+  }, [cart]);*/
 
   const calculateTotal = () => {
     return cartItems.reduce((total, item) => {

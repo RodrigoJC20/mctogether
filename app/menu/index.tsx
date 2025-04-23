@@ -1,13 +1,14 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal, TextInput } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Add this import
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import menuData from '../../assets/data/menu.json';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface MenuItem {
   id: string;
   name: string;
-  price: string;
+  price: number;
   imageName: string;
 }
 
@@ -35,6 +36,21 @@ export default function Menu() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [quantity, setQuantity] = useState('1');
   const [cart, setCart] = useState<CartItem[]>([]);
+
+  useEffect(() => {
+    const loadCart = async () => {
+      try {
+        const storedCart = await AsyncStorage.getItem('cartItems');
+        if (storedCart) {
+          setCart(JSON.parse(storedCart));
+        }
+      } catch (error) {
+        console.error('Error loading cart:', error);
+      }
+    };
+
+    loadCart();
+  }, []);
   
   const handleQuantityChange = (value: string) => {
     const numValue = parseInt(value);
@@ -81,7 +97,15 @@ export default function Menu() {
     <View style={styles.container}>
       <TouchableOpacity 
         style={styles.backButton}
-        onPress={() => router.back()}
+        onPress={async () => {
+          try {
+            await AsyncStorage.setItem('cartItems', JSON.stringify(cart));
+            console.log('Cart saved:', cart);
+          } catch (error) {
+            console.error('Error saving cart:', error);
+          }
+          router.back();
+        }}
       >
         <Ionicons name="arrow-back" size={24} color="white" />
       </TouchableOpacity>
