@@ -1,16 +1,28 @@
 import { useState, useEffect, useCallback } from 'react';
 import { groupApi } from '../api/client';
+import { useAuth } from './useAuth';
 
 interface GroupMember {
-  userId: number;
+  userId: string;
   role: 'leader' | 'member';
 }
 
-export const useGroup = (currentUserId: number) => {
+export const useGroup = (currentUserId: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [groupId, setGroupId] = useState<string | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
+  const { user } = useAuth();
+
+  // Effect to sync with user's group status
+  useEffect(() => {
+    if (user?.groupId) {
+      setGroupId(user.groupId);
+    } else {
+      setGroupId(null);
+      setMembers([]);
+    }
+  }, [user?.groupId]);
 
   const fetchGroupMembers = useCallback(async () => {
     if (!groupId) return;
@@ -19,7 +31,7 @@ export const useGroup = (currentUserId: number) => {
       const group = await groupApi.getGroup(groupId);
       // Include all members, including the current user
       const allMembers = group.members
-        .map((userId: number) => ({
+        .map((userId: string) => ({
           userId,
           role: userId === group.leaderId ? 'leader' : 'member'
         }));
@@ -50,27 +62,31 @@ export const useGroup = (currentUserId: number) => {
     };
   }, [groupId, fetchGroupMembers]);
 
-  const leaveCurrentGroup = async (userId: number) => {
+  const leaveCurrentGroup = async (userId: string) => {
     try {
       console.log('useGroup: Leaving current group for userId:', userId);
       if (groupId) {
         await groupApi.leaveGroup(groupId, userId);
+        // Clear local state immediately after successful leave
+        setGroupId(null);
+        setMembers([]);
       } else {
         // If we don't have a groupId stored, we need to fetch user info to get their group
         const userInfo = await groupApi.getUser(userId);
         if (userInfo.groupId) {
           await groupApi.leaveGroup(userInfo.groupId, userId);
+          // Clear local state
+          setGroupId(null);
+          setMembers([]);
         }
       }
-      setGroupId(null);
-      setMembers([]);
     } catch (err) {
       console.error('useGroup: Error leaving group:', err);
       throw err;
     }
   };
 
-  const createGroup = async (userId: number, name?: string) => {
+  const createGroup = async (userId: string, name?: string) => {
     try {
       console.log('useGroup: Creating group with userId:', userId);
       setLoading(true);
@@ -107,7 +123,7 @@ export const useGroup = (currentUserId: number) => {
     }
   };
 
-  const joinGroup = async (groupId: string, userId: number) => {
+  const joinGroup = async (groupId: string, userId: string) => {
     try {
       console.log('useGroup: Joining group:', { groupId, userId });
       setLoading(true);
@@ -152,5 +168,6 @@ export const useGroup = (currentUserId: number) => {
     createGroup,
     joinGroup,
     leaveCurrentGroup,
+    fetchGroupMembers,
   };
 }; 

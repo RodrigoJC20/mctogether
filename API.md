@@ -25,6 +25,8 @@ interface RegisterResponse {
     email: string;
     username: string;
     currency: number;
+    groupId?: string;
+    role?: 'leader' | 'member';
   };
   token: string;  // JWT token
 }
@@ -56,6 +58,8 @@ interface LoginResponse {
     email: string;
     username: string;
     currency: number;
+    groupId?: string;
+    role?: 'leader' | 'member';
   };
   token: string;  // JWT token
 }
@@ -71,16 +75,6 @@ const login = async (identifier: string, password: string): Promise<LoginRespons
   });
   if (!response.ok) throw new Error('Failed to login');
   return response.json();
-};
-
-// Example usage with email
-const loginWithEmail = async () => {
-  return login('user@example.com', 'password');
-};
-
-// Example usage with username
-const loginWithUsername = async () => {
-  return login('username', 'password');
 };
 ```
 
@@ -162,7 +156,7 @@ const updateCurrency = async (userId: string, amount: number, token: string): Pr
 ### Create Group
 ```typescript
 interface CreateGroupRequest {
-  name?: string;
+  name?: string;  // Optional group name
 }
 
 interface CreateGroupResponse {
@@ -171,7 +165,7 @@ interface CreateGroupResponse {
   members: string[]; // Array of member user IDs
   status: 'active' | 'disbanded';
   name?: string;
-  createdAt: string;
+  createdAt: Date;
 }
 
 // Example request
@@ -184,7 +178,10 @@ const createGroup = async (name: string | undefined, token: string): Promise<Cre
     },
     body: JSON.stringify({ name }),
   });
-  if (!response.ok) throw new Error('Failed to create group');
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to create group');
+  }
   return response.json();
 };
 ```
@@ -219,7 +216,10 @@ const joinGroup = async (groupId: string, token: string): Promise<JoinGroupRespo
       'Content-Type': 'application/json',
     },
   });
-  if (!response.ok) throw new Error('Failed to join group');
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to join group');
+  }
   return response.json();
 };
 ```
@@ -235,7 +235,10 @@ const leaveGroup = async (groupId: string, token: string): Promise<void> => {
       'Content-Type': 'application/json',
     },
   });
-  if (!response.ok) throw new Error('Failed to leave group');
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to leave group');
+  }
 };
 ```
 
@@ -254,8 +257,23 @@ interface ErrorResponse {
 Common error scenarios:
 - `401 Unauthorized`: Invalid or missing JWT token
 - `404 Not Found`: User or group not found
-- `400 Bad Request`: Invalid input or business rule violation
+- `400 Bad Request`: Invalid input or business rule violation (e.g., "User is already in a group")
 - `500 Internal Server Error`: Server-side error
+
+## Notes
+1. All authenticated requests require a valid JWT token
+2. JWT tokens expire after 24 hours
+3. Users can only be in one group at a time
+4. Only the group leader can delete the group
+5. When the leader leaves, the group is automatically disbanded
+6. If all members leave a group, the group is automatically disbanded
+7. Currency can be positive or negative (for adding or subtracting)
+8. Store JWT token securely (e.g., using AsyncStorage in Expo)
+9. All IDs (user and group) are MongoDB ObjectIds (strings)
+10. The `/auth/me` endpoint returns the full user object including group and role information
+11. Group operations (create/join/leave) require authentication and use the JWT token to identify the user
+12. Error responses include detailed messages that should be shown to users
+13. The group status can be either 'active' or 'disbanded'
 
 ## Example Usage
 
@@ -293,11 +311,122 @@ async function example() {
 }
 ```
 
-## Notes
-1. All authenticated requests require a valid JWT token
-2. JWT tokens expire after 24 hours
-3. Users can only be in one group at a time
-4. Only the group leader can delete the group
-5. When the leader leaves, the group is automatically disbanded
-6. Currency can be positive or negative (for adding or subtracting)
-7. Store JWT token securely (e.g., using AsyncStorage in Expo) 
+## Payments
+
+### Make Order
+```typescript
+interface Order {
+  // Order details to be specified
+}
+
+// Example request
+const makeOrder = async (order: Order, token: string): Promise<void> => {
+  const response = await fetch('http://localhost:3000/payments/make-order', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(order),
+  });
+  if (!response.ok) throw new Error('Failed to make order');
+};
+```
+
+### Process Payment
+```typescript
+interface Pay {
+  // Payment details to be specified
+}
+
+// Example request
+const pay = async (payment: Pay, token: string): Promise<void> => {
+  const response = await fetch('http://localhost:3000/payments/pay', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payment),
+  });
+  if (!response.ok) throw new Error('Failed to process payment');
+};
+```
+
+### Handle Member Left Group
+```typescript
+interface MemberLeftGroup {
+  // Member left details to be specified
+}
+
+// Example request
+const memberLeft = async (details: MemberLeftGroup, token: string): Promise<void> => {
+  const response = await fetch('http://localhost:3000/payments/member-left', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(details),
+  });
+  if (!response.ok) throw new Error('Failed to process member left');
+};
+```
+
+## Pets
+
+### Get User's Pet
+```typescript
+interface PetResponse {
+  // Pet details to be specified
+}
+
+// Example request
+const getPet = async (userId: string, token: string): Promise<PetResponse> => {
+  const response = await fetch(`http://localhost:3000/pets/${userId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!response.ok) throw new Error('Failed to fetch pet');
+  return response.json();
+};
+```
+
+### Create Pet
+```typescript
+// Example request
+const createPet = async (userId: string, token: string): Promise<PetResponse> => {
+  const response = await fetch('http://localhost:3000/pets', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ userId }),
+  });
+  if (!response.ok) throw new Error('Failed to create pet');
+  return response.json();
+};
+```
+
+### Update Pet
+```typescript
+interface PetUpdate {
+  // Pet update details to be specified
+}
+
+// Example request
+const updatePet = async (pet: PetUpdate, token: string): Promise<PetResponse> => {
+  const response = await fetch('http://localhost:3000/pets/update', {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(pet),
+  });
+  if (!response.ok) throw new Error('Failed to update pet');
+  return response.json();
+}; 

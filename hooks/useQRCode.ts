@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { useAuth } from './useAuth';
 import { fetchWithAuth } from '../api/authApi';
@@ -14,6 +14,19 @@ export const useQRCode = () => {
   const [groupId, setGroupId] = useState<string | null>(null);
   const [members, setMembers] = useState<string[]>([]);
   const { user, token } = useAuth();
+
+  // Effect to sync with user's group status
+  useEffect(() => {
+    if (user?.groupId) {
+      setGroupId(user.groupId);
+    } else {
+      // Clear state when user has no group
+      setGroupId(null);
+      setMembers([]);
+      setShowQR(false);
+      setMode('display');
+    }
+  }, [user?.groupId]);
 
   const handleCreateParty = async () => {
     try {
