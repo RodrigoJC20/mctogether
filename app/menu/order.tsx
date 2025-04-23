@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Add this import
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,8 +30,25 @@ const getMenuImage = (imageName: string) => {
 
 export default function Order() {
   const router = useRouter();
-  const { cart } = useLocalSearchParams<{ cart: string }>();
-  const cartItems: CartItem[] = cart ? JSON.parse(cart) : [];
+  const { cart: cartParam } = useLocalSearchParams<{ cart: string }>();
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+  useEffect(() => {
+    const loadCart = async () => {
+      try {
+        const storedCart = await AsyncStorage.getItem('cart');
+        if (storedCart) {
+          setCartItems(JSON.parse(storedCart));
+        } else if (cartParam) {
+          setCartItems(JSON.parse(cartParam));
+        }
+      } catch (error) {
+        console.error('Error loading cart:', error);
+      }
+    };
+
+    loadCart();
+  }, [cartParam]);
 
   const calculateTotal = () => {
     return cartItems.reduce((total, item) => {
@@ -39,8 +56,15 @@ export default function Order() {
     }, 0).toFixed(2);
   };
 
-  // Remove cart
-  // await AsyncStorage.removeItem('cartItems');
+  const clearCart = async () => {
+    try {
+      await AsyncStorage.setItem('cart', JSON.stringify([]));
+      setCartItems([]);
+      router.setParams({ cart: JSON.stringify([]) });
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -79,15 +103,23 @@ export default function Order() {
 
       <View style={styles.footer}>
         <Text style={styles.totalText}>Total: ${calculateTotal()}</Text>
-        <TouchableOpacity 
-          style={styles.checkoutButton}
-          onPress={() => {
-            // TODO Checkout functionality will be implemented later
-            console.log('Checkout button pressed');
-          }}
-        >
-          <Text style={styles.checkoutButtonText}>Checkout</Text>
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity 
+            style={styles.clearButton}
+            onPress={clearCart}
+          >
+            <Ionicons name="trash-outline" size={24} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.checkoutButton}
+            onPress={() => {
+              // TODO Checkout functionality will be implemented later
+              console.log('Checkout button pressed');
+            }}
+          >
+            <Text style={styles.checkoutButtonText}>Checkout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -130,6 +162,19 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
     backgroundColor: '#ffffff',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+  },
+  clearButton: {
+    backgroundColor: '#ff0000',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    alignItems: 'center',
   },
   totalText: {
     fontSize: 20,
