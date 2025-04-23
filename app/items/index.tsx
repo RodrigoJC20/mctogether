@@ -62,7 +62,7 @@ export default function Items() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#111' 
+    backgroundColor: '#f7f7f7' 
   },
   backButton: {
     position: 'absolute',
@@ -78,13 +78,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#f7f7f7'
   },
   bottomSection: {
     flex: 1,
-    backgroundColor: '#222',
+    backgroundColor: '#f7f7f7',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 10,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.9,
+    shadowRadius: 3,
   },
   focusedImage: {
     width: '100%',

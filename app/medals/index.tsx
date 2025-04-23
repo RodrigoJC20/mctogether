@@ -144,11 +144,11 @@ export default function Medals() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#f7f7f7',
     paddingTop: 60,
   },
   title: {
-    color: 'white',
+    color: 'black',
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -173,9 +173,15 @@ const styles = StyleSheet.create({
     width: '45%',
     margin: 10,
     alignItems: 'center',
-    backgroundColor: '#2a2a2a',
-    borderRadius: 15,
+    backgroundColor: '#white',
     padding: 15,
+    borderRadius: 5,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   medalImageContainer: {
     width: 80,

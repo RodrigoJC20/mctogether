@@ -1,7 +1,7 @@
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text } from 'react-native';
-import { AuthProvider, useAuth } from './hooks/useAuth';
+import { AuthProvider, useAuth } from '../hooks/useAuth';
 import { useEffect } from 'react';
 import React from 'react';
 
