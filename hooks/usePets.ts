@@ -16,7 +16,7 @@ export const usePets = (groupId: string | null, currentUserId: string | null, me
   // Pet data - you would normally get this from your state/backend
   const myPet: Pet | null = currentUserId ? {
     id: `pet-${currentUserId}`,
-    image: require('../../assets/images/pet.png')
+    image: require('../assets/images/pet.png')
   } : null;
   
   // Create friend pets based on group members, excluding current user
@@ -24,7 +24,7 @@ export const usePets = (groupId: string | null, currentUserId: string | null, me
     .filter(member => member.userId !== currentUserId)
     .map(member => ({
       id: `pet-${member.userId}`,
-      image: require('../../assets/images/pet.png')
+      image: require('../assets/images/pet.png')
     }));
 
   const toggleDebugPerimeter = () => {

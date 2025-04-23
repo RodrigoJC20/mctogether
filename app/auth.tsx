@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { useAuth } from './hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
