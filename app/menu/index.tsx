@@ -79,6 +79,13 @@ export default function Menu() {
         ))}
       </ScrollView>
 
+      <TouchableOpacity 
+        style={styles.cartButton}
+        onPress={() => router.push('/menu/order')}
+      >
+        <Ionicons name="cart" size={24} color="black" />
+      </TouchableOpacity>
+
       <Modal
         visible={!!selectedItem}
         transparent={true}
@@ -288,5 +295,21 @@ const styles = StyleSheet.create({
     top: 10,
     right: 10,
     padding: 5,
+  },
+  cartButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#ffbc0d',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
 }); 
