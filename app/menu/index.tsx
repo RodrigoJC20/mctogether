@@ -11,6 +11,10 @@ interface MenuItem {
   imageName: string;
 }
 
+interface CartItem extends MenuItem {
+  quantity: number;
+}
+
 // Get fallback image
 const FALLBACK_IMAGE = require('../../assets/images/menu/null.png');
 
@@ -30,6 +34,7 @@ export default function Menu() {
   const router = useRouter();
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [quantity, setQuantity] = useState('1');
+  const [cart, setCart] = useState<CartItem[]>([]);
   
   const handleQuantityChange = (value: string) => {
     const numValue = parseInt(value);
@@ -47,6 +52,28 @@ export default function Menu() {
     const newQuantity = parseInt(quantity) - 1;
     if (newQuantity > 0) {
       setQuantity(newQuantity.toString());
+    }
+  };
+
+  const addToCart = () => {
+    if (selectedItem) {
+      const newItem: CartItem = {
+        ...selectedItem,
+        quantity: parseInt(quantity)
+      };
+      
+      setCart(prevCart => {
+        const existingItemIndex = prevCart.findIndex(item => item.id === selectedItem.id);
+        if (existingItemIndex >= 0) {
+          const updatedCart = [...prevCart];
+          updatedCart[existingItemIndex].quantity += parseInt(quantity);
+          return updatedCart;
+        }
+        return [...prevCart, newItem];
+      });
+      
+      setSelectedItem(null);
+      setQuantity('1');
     }
   };
 
@@ -78,13 +105,6 @@ export default function Menu() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-
-      <TouchableOpacity 
-        style={styles.cartButton}
-        onPress={() => router.push('/menu/order')}
-      >
-        <Ionicons name="cart" size={24} color="black" />
-      </TouchableOpacity>
 
       <Modal
         visible={!!selectedItem}
@@ -129,12 +149,9 @@ export default function Menu() {
 
                 <TouchableOpacity 
                   style={styles.addButton}
-                  onPress={() => {
-                    // Add to cart functionality will be implemented later
-                    setSelectedItem(null);
-                  }}
+                  onPress={addToCart}
                 >
-                  <Text style={styles.addButtonText}>Add</Text>
+                  <Text style={styles.addButtonText}>Add to Cart</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
@@ -148,6 +165,21 @@ export default function Menu() {
           </View>
         </View>
       </Modal>
+
+      <TouchableOpacity 
+        style={styles.cartButton}
+        onPress={() => router.push({
+          pathname: '/menu/order',
+          params: { cart: JSON.stringify(cart) }
+        })}
+      >
+        <Ionicons name="cart" size={24} color="black" />
+        {cart.length > 0 && (
+          <View style={styles.cartBadge}>
+            <Text style={styles.cartBadgeText}>{cart.reduce((sum, item) => sum + item.quantity, 0)}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
     </View>
   );
 }
@@ -311,5 +343,22 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#ff0000',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 5,
+  },
+  cartBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 }); 
