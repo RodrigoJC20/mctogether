@@ -2,12 +2,12 @@ import React, { useEffect } from 'react';
 import { View, ImageBackground, StyleSheet, TouchableOpacity, Text, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
-import { QRCodeComponent } from './components/QRCode';
-import PetsArea from './components/PetsArea';
-import { useUIState } from './hooks/useUIState';
-import { useQRCode } from './hooks/useQRCode';
-import { usePets } from './hooks/usePets';
-import { useAuth } from './hooks/useAuth';
+import { QRCodeComponent } from '../components/QRCode';
+import PetsArea from '../components/PetsArea';
+import { useUIState } from '../hooks/useUIState';
+import { useQRCode } from '../hooks/useQRCode';
+import { usePets } from '../hooks/usePets';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Home() {
   const router = useRouter();
