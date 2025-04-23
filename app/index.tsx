@@ -80,6 +80,12 @@ export default function Home() {
           <FontAwesome5 name="trophy" size={24} color="white" />
         </TouchableOpacity>
 
+        {/* Coupons Button */}
+        <TouchableOpacity style={styles.couponsButton} onPress={() => router.push('/coupons')}>
+          <FontAwesome5 name="ticket-alt" size={24} color="white" />
+        </TouchableOpacity>
+
+        {/* Items Button */}
         <TouchableOpacity style={styles.bottomRightButton} onPress={() => router.push('/items')}>
           <MaterialIcons name="pets" size={28} color="white" />
         </TouchableOpacity>
@@ -189,6 +195,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 40,
     left: 20,
+    backgroundColor: '#00000088',
+    borderRadius: 20,
+    padding: 10,
+  },
+  couponsButton: {
+    position: 'absolute',
+    bottom: 40,
+    left: 80, // Position it to the right of the medals button
     backgroundColor: '#00000088',
     borderRadius: 20,
     padding: 10,
