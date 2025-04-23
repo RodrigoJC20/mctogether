@@ -1,9 +1,41 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
+import menuData from '../../assets/data/menu.json';
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: string;
+  imageName: string;
+  quantity: number;
+}
+
+// Get fallback image
+const FALLBACK_IMAGE = require('../../assets/images/menu/null.png');
+
+// Function to safely get image with fallback
+const getMenuImage = (imageName: string) => {
+  const imageMap: { [key: string]: any } = {
+    'bigmac': require('../../assets/images/menu/bigmac.png'),
+    'mcfeast': require('../../assets/images/menu/mcfeast.png'),
+    'mcchicken': require('../../assets/images/menu/mcchicken.png'),
+    'mcfries': require('../../assets/images/menu/mcfries.png'),
+  };
+  return imageMap[imageName] || FALLBACK_IMAGE;
+};
 
 export default function Order() {
   const router = useRouter();
+  const { cart } = useLocalSearchParams<{ cart: string }>();
+  const cartItems: CartItem[] = cart ? JSON.parse(cart) : [];
+
+  const calculateTotal = () => {
+    return cartItems.reduce((total, item) => {
+      return total + (parseFloat(item.price) * item.quantity);
+    }, 0).toFixed(2);
+  };
 
   return (
     <View style={styles.container}>
@@ -17,12 +49,29 @@ export default function Order() {
       <Text style={styles.title}>Order Summary</Text>
       
       <ScrollView style={styles.orderList}>
-        {/* Order items will be displayed here */}
-        <Text style={styles.emptyText}>Your cart is empty</Text>
+        {cartItems.length > 0 ? (
+          cartItems.map((item) => (
+            <View key={item.id} style={styles.orderItem}>
+              <Image 
+                source={getMenuImage(item.imageName)} 
+                style={styles.orderItemImage} 
+              />
+              <View style={styles.orderItemDetails}>
+                <Text style={styles.orderItemName}>{item.name}</Text>
+                <Text style={styles.orderItemPrice}>${item.price} x {item.quantity}</Text>
+                <Text style={styles.orderItemSubtotal}>
+                  Subtotal: ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                </Text>
+              </View>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.emptyText}>Your cart is empty</Text>
+        )}
       </ScrollView>
 
       <View style={styles.footer}>
-        <Text style={styles.totalText}>Total: $0.00</Text>
+        <Text style={styles.totalText}>Total: ${calculateTotal()}</Text>
         <TouchableOpacity 
           style={styles.checkoutButton}
           onPress={() => {
@@ -91,5 +140,37 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  orderItem: {
+    flexDirection: 'row',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#ffffff',
+  },
+  orderItemImage: {
+    width: 80,
+    height: 80,
+    resizeMode: 'contain',
+    marginRight: 15,
+  },
+  orderItemDetails: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  orderItemName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  orderItemPrice: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 5,
+  },
+  orderItemSubtotal: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#ff0000',
   },
 }); 
