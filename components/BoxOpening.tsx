@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
@@ -21,25 +21,47 @@ const RARITY_COLORS = {
 
 export const BoxOpening: React.FC<BoxOpeningProps> = ({ boxType, onClose }) => {
   const [showResult, setShowResult] = useState(false);
+  const [boxOpened, setBoxOpened] = useState(false);
   const [selectedItem, setSelectedItem] = useState('');
   const [itemRarity, setItemRarity] = useState<'classic' | 'epic' | 'exotic'>('classic');
   const fadeAnim = new Animated.Value(0);
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+
+  // Shake animation
+  const startShake = () => {
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+    ]).start(() => {
+      // After shaking, change to open box image
+      setBoxOpened(true);
+      
+      // Then proceed with the rest of the opening sequence
+      setTimeout(() => {
+        // Randomly select an item and rarity
+        const rarities = ['classic', 'epic', 'exotic'] as const;
+        const selectedRarity = rarities[Math.floor(Math.random() * rarities.length)];
+        const items = ITEMS[selectedRarity];
+        const randomItem = items[Math.floor(Math.random() * items.length)];
+        
+        setItemRarity(selectedRarity);
+        setSelectedItem(randomItem);
+        setShowResult(true);
+      }, 500);
+    });
+  };
 
   useEffect(() => {
-    // Simulate box opening animation
-    const timer = setTimeout(() => {
-      // Randomly select an item and rarity
-      const rarities = ['classic', 'epic', 'exotic'] as const;
-      const selectedRarity = rarities[Math.floor(Math.random() * rarities.length)];
-      const items = ITEMS[selectedRarity];
-      const randomItem = items[Math.floor(Math.random() * items.length)];
-      
-      setItemRarity(selectedRarity);
-      setSelectedItem(randomItem);
-      setShowResult(true);
-    }, 2000);
+    // Start the shaking animation after a brief delay
+    const shakeTimer = setTimeout(() => {
+      startShake();
+    }, 500);
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(shakeTimer);
   }, []);
 
   useEffect(() => {
@@ -61,8 +83,21 @@ export const BoxOpening: React.FC<BoxOpeningProps> = ({ boxType, onClose }) => {
       <View style={styles.content}>
         {!showResult ? (
           <View style={styles.loadingContainer}>
-            <FontAwesome5 name="box-open" size={100} color="#FECB94" />
-            <Text style={styles.loadingText}>Opening Box...</Text>
+            <Animated.View style={{
+              transform: [{
+                translateX: shakeAnim
+              }]
+            }}>
+              <Image
+                source={boxOpened 
+                  ? require('@/assets/images/box-open.png') 
+                  : require('@/assets/images/box.png')}
+                style={styles.openBox}
+              />
+            </Animated.View>
+            <Text style={styles.loadingText}>
+              {boxOpened ? 'Revealing Prize...' : 'Opening Box...'}
+            </Text>
           </View>
         ) : (
           <Animated.View 
@@ -127,4 +162,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 20,
   },
-}); 
+  openBox: {
+    width: 250,
+    height: 125,
+    resizeMode: 'contain',
+    marginVertical: 20,
+  }
+});
