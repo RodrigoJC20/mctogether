@@ -26,7 +26,7 @@ export default function Order() {
         <TouchableOpacity 
           style={styles.checkoutButton}
           onPress={() => {
-            // Checkout functionality will be implemented later
+            // TODO Checkout functionality will be implemented later
           }}
         >
           <Text style={styles.checkoutButtonText}>Checkout</Text>
