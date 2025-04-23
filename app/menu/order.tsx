@@ -50,7 +50,7 @@ export default function Order() {
     };
 
     fetchCartItems();
-  }, [cart]);*/
+  }, []);*/
 
   const calculateTotal = () => {
     return cartItems.reduce((total, item) => {

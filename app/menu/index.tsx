@@ -40,7 +40,7 @@ export default function Menu() {
   useEffect(() => {
     const loadCart = async () => {
       try {
-        const storedCart = await AsyncStorage.getItem('cartItems');
+        const storedCart = await AsyncStorage.getItem('cart');
         if (storedCart) {
           setCart(JSON.parse(storedCart));
         }
@@ -99,7 +99,7 @@ export default function Menu() {
         style={styles.backButton}
         onPress={async () => {
           try {
-            await AsyncStorage.setItem('cartItems', JSON.stringify(cart));
+            await AsyncStorage.setItem('cart', JSON.stringify(cart));
             console.log('Cart saved:', cart);
           } catch (error) {
             console.error('Error saving cart:', error);
@@ -113,21 +113,27 @@ export default function Menu() {
       <Text style={styles.title}>Menu</Text>
       
       <ScrollView contentContainerStyle={styles.menuGrid}>
-        {menuData.menuItems.map((item: MenuItem) => (
-          <TouchableOpacity 
-            key={item.id} 
-            style={styles.menuItem}
-            onPress={() => setSelectedItem(item)}
-          >
-            <View style={styles.imageContainer}>
-              <Image source={getMenuImage(item.imageName)} style={styles.itemImage} />
-            </View>
-            <View style={styles.infoContainer}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.priceText}>${item.price}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+        {menuData.menuItems.map((item) => {
+          const menuItem: MenuItem = {
+            ...item,
+            price: parseFloat(item.price), // Convert price to number
+          };
+          return (
+            <TouchableOpacity 
+              key={menuItem.id} 
+              style={styles.menuItem}
+              onPress={() => setSelectedItem(menuItem)}
+            >
+              <View style={styles.imageContainer}>
+                <Image source={getMenuImage(menuItem.imageName)} style={styles.itemImage} />
+              </View>
+              <View style={styles.infoContainer}>
+                <Text style={styles.itemName}>{menuItem.name}</Text>
+                <Text style={styles.priceText}>${menuItem.price}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
 
       <Modal
@@ -192,10 +198,17 @@ export default function Menu() {
 
       <TouchableOpacity 
         style={styles.cartButton}
-        onPress={() => router.push({
-          pathname: '/menu/order',
-          params: { cart: JSON.stringify(cart) }
-        })}
+        onPress={() => {
+          // Save cart to AsyncStorage
+          AsyncStorage.setItem('cart', JSON.stringify(cart))
+            .then(() => console.log('Cart saved:', cart))
+            .catch(error => console.error('Error saving cart:', error));
+          // Navigate to order page
+          router.push({
+            pathname: '/menu/order',
+            params: { cart: JSON.stringify(cart) }
+          });
+        }}
       >
         <Ionicons name="cart" size={24} color="black" />
         {cart.length > 0 && (
