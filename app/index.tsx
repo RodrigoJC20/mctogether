@@ -8,6 +8,7 @@ import { useUIState } from '../hooks/useUIState';
 import { useQRCode } from '../hooks/useQRCode';
 import { usePets } from '../hooks/usePets';
 import { useAuth } from '../hooks/useAuth';
+import { useGroup } from '@/hooks/useGroup';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function Home() {
@@ -30,15 +31,23 @@ export default function Home() {
 
   const handleQRScannedWrapper = async (data: string) => {
     const success = await handleQRScanned(data);
+    
     if (success) {
       setModalVisible(false); // Close the main party menu modal
     }
   };
 
   const handleLogout = async () => {
+    console.log('Members length:', members.length);
     await logout();
   };
 
+  const handlePartyButton = () => {
+    console.log('Members length: ', members.length);
+    console.log('Members: ', members);
+    setModalVisible(true);
+  };
+  
   return (
     <ImageBackground source={require('../assets/images/bg.jpeg')} style={styles.background}>
       {/* Pets Area - This will handle all pet movement and rendering */}
@@ -85,7 +94,7 @@ export default function Home() {
         </TouchableOpacity>
 
         {/* Party Button */}
-        <TouchableOpacity style={styles.partyButton} onPress={() => setModalVisible(true)}>
+        <TouchableOpacity style={styles.partyButton} onPress={handlePartyButton}>
           <Text style={styles.partyText}>Party</Text>
         </TouchableOpacity>
 
@@ -278,8 +287,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '80%',
     position: 'relative',
-    borderWidth: 3,
-    borderColor: '#DB0007',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.34,
+    shadowRadius: 6.27,
+    elevation: 10,
+    borderTopColor: 'rgba(255, 255, 255, 0.7)',
+    borderLeftColor: 'rgba(255, 255, 255, 0.7)',
+    borderRightColor: 'rgba(0, 0, 0, 0.15)',
+    borderBottomColor: 'rgba(0, 0, 0, 0.15)',
+    borderWidth: 2.5,
   },
   modalText: {
     color: 'black',
@@ -329,8 +349,8 @@ const styles = StyleSheet.create({
   },
   closeCrossButton: {
     position: 'absolute',
-    top: -5,
-    right: -7.5,
+    top: 0,
+    right: 0,
     padding: 5,
   },
   closeCrossText: {
