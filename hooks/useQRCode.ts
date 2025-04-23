@@ -16,10 +16,21 @@ export const useQRCode = () => {
   const [members, setMembers] = useState<string[]>([]);
   const { user, token } = useAuth();
 
+  const fetchGroupMembers = async (gId: string) => {
+    try {
+      if (!token) return;
+      const group = await groupApi.getGroup(gId);
+      setMembers(group.members || []);
+    } catch (err) {
+      console.error('Failed to fetch group members:', err);
+    }
+  };
+
   // Effect to sync with user's group status
   useEffect(() => {
     if (user?.groupId) {
       setGroupId(user.groupId);
+      fetchGroupMembers(user.groupId);
     } else {
       // Clear state when user has no group
       setGroupId(null);
@@ -28,6 +39,13 @@ export const useQRCode = () => {
       setMode('display');
     }
   }, [user?.groupId]);
+
+  const handlePartyButton = async () => {
+    if (user?.groupId) {
+      await fetchGroupMembers(user.groupId);
+    }
+    setShowQR(true);
+  };
 
   const handleCreateParty = async () => {
     try {
@@ -133,6 +151,10 @@ export const useQRCode = () => {
       console.log('Party creation response:', response);
       setGroupId(response._id);
       setMembers(response.members);
+      
+      // Fetch latest members to ensure we have up-to-date data
+      await fetchGroupMembers(response._id);
+      
       setMode('display');
       setShowQR(true);
       return response; // Return the response for error handling
@@ -188,6 +210,10 @@ export const useQRCode = () => {
       
       setGroupId(updatedGroup._id);
       setMembers(updatedGroup.members);
+      
+      // Fetch latest members to ensure we have up-to-date data
+      await fetchGroupMembers(updatedGroup._id);
+      
       setShowQR(false);
       setMode('display');
       return true; // Indicate successful join
@@ -229,5 +255,6 @@ export const useQRCode = () => {
     handleCreateParty,
     handleJoinParty,
     handleQRScanned,
+    fetchGroupMembers,
   };
 }; 

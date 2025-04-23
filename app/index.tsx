@@ -14,7 +14,7 @@ export default function Home() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { modalVisible, setModalVisible } = useUIState();
-  const { showQR, setShowQR, mode, setMode, loading, error, groupId, members, handleCreateParty, handleJoinParty, handleQRScanned } = useQRCode();
+  const { showQR, setShowQR, mode, setMode, loading, error, groupId, members, handleCreateParty, handleJoinParty, handleQRScanned, fetchGroupMembers } = useQRCode();
   const { myPet, friendPets, showDebugPerimeter, toggleDebugPerimeter } = usePets(
     groupId || null, 
     user?._id || null, 
@@ -42,10 +42,11 @@ export default function Home() {
     await logout();
   };
 
-  const handlePartyButton = () => {
+  const handlePartyButton = async () => {
     setModalVisible(true);
-    // If we're in a group, show the QR code
+    // If we're in a group, show the QR code and fetch latest members
     if (groupId) {
+      await fetchGroupMembers(groupId);
       setShowQR(true);
     }
   };
@@ -95,7 +96,7 @@ export default function Home() {
 
         {/* Party Button - Shows QR code when in a party */}
         <TouchableOpacity style={styles.partyButton} onPress={handlePartyButton}>
-          {groupId ? (
+          {user?.groupId ? (
             <View style={styles.partyButtonContent}>
               <Ionicons name="qr-code" size={24} color="white" />
               <Text style={styles.partyText}>Party</Text>
