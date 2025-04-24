@@ -174,6 +174,7 @@ export default function Order() {
                 clearCart();
                 // Show success message
                 alert('Payment successful! Your order has been placed.');
+                router.navigate('/');
               }
 
               setIsCheckoutModalVisible(false);
