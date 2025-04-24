@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { BoxOpening } from '../../components/BoxOpening';
+import { RotatingBackground } from '../../components/RotatingBackground';
 
 // Temporary items for testing
 const ITEMS = {
@@ -19,30 +20,42 @@ export default function Shop() {
   };
 
   return (
-    <ImageBackground 
-      source={require('../../assets/images/shop-bg.jpg')} 
-      style={styles.container}
-    >
+    <View style={styles.container}>
       {/* Shop Sign */}
-      <Image 
+      <Text style={styles.logoText}>
+        <Text style={styles.logoTextMc}>Mc</Text>
+        <Text style={styles.logoTextTogether}>Shop</Text>
+      </Text>
+      {/* <Image 
         source={require('../../assets/images/shop-sign.jpg')}
         style={styles.shopSign}
-      />
+      /> */}
 
-      <ScrollView contentContainerStyle={styles.boxesContainer}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.boxesContainer}
+      >
         {/* Happy Meal Boxes */}
-        <View style={styles.boxesContainer}>
+        <View style={styles.boxesRow}>
           {/* Common Box */}
           <TouchableOpacity 
             style={styles.boxContainer}
             onPress={() => handleBoxPress('common')}
           >
+            <RotatingBackground color="#3A7D44" />
             <Image 
               source={require('../../assets/images/box.png')}
               style={styles.boxImage}
             />
-            <Text style={styles.boxTitle}>Common Box</Text>
-            <Text style={styles.boxPrice}>100 coins</Text>
+            <Text style={[styles.boxTitle, styles.commonBoxTitle]}>Common Box</Text>
+            <View style={styles.currencyContainer}>
+              <Image 
+                source={require('@/assets/images/coin.png')} 
+                style={styles.coinImage}
+              />
+              <Text style={styles.boxPrice}>100</Text>
+            </View>
           </TouchableOpacity>
 
           {/* Rare Box */}
@@ -50,12 +63,19 @@ export default function Shop() {
             style={styles.boxContainer}
             onPress={() => handleBoxPress('rare')}
           >
+            <RotatingBackground color="#DB0007" />
             <Image 
               source={require('../../assets/images/box.png')}
               style={styles.boxImage}
             />
-            <Text style={styles.boxTitle}>Rare Box</Text>
-            <Text style={styles.boxPrice}>500 coins</Text>
+            <Text style={[styles.boxTitle, styles.rareBoxTitle]}>Rare Box</Text>
+            <View style={styles.currencyContainer}>
+              <Image 
+                source={require('@/assets/images/coin.png')} 
+                style={styles.coinImage}
+              />
+              <Text style={styles.boxPrice}>500</Text>
+            </View>
           </TouchableOpacity>
 
           {/* Exclusive Box */}
@@ -63,12 +83,19 @@ export default function Shop() {
             style={styles.boxContainer}
             onPress={() => handleBoxPress('exclusive')}
           >
+            <RotatingBackground color="#FFBC0D" />
             <Image 
               source={require('../../assets/images/box.png')}
               style={styles.boxImage}
             />
-            <Text style={styles.boxTitle}>Exclusive Box</Text>
-            <Text style={styles.boxPrice}>1000 coins</Text>
+            <Text style={[styles.boxTitle, styles.exclusiveBoxTitle]}>Exclusive Box</Text>
+            <View style={styles.currencyContainer}>
+              <Image 
+                source={require('@/assets/images/coin.png')} 
+                style={styles.coinImage}
+              />
+              <Text style={styles.boxPrice}>1000</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -83,46 +110,48 @@ export default function Shop() {
           }}
         />
       )}
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: '#F5F5F5',
+    paddingTop: 60,
   },
   shopSign: {
     width: '100%',
-    height: 120,
+    //height: 120,
     resizeMode: 'contain',
     alignSelf: 'center',
     marginTop: 20,
     marginBottom: 20
   },
+  logoText: {
+    fontSize: 22,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginBottom: 60
+  },
+  logoTextMc: {
+    color: '#FFBC0D', // McDonald's yellow
+  },
+  logoTextTogether: {
+    color: 'black',
+  },
   boxesContainer: {
-    flexGrow: 1,
-    alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 40,
     paddingTop: 20
   },
+  boxesRow: {
+    flexDirection: 'row',
+    gap: 40
+  },
   boxContainer: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 20,
-    padding: 20,
-    width: '90%',
-    maxWidth: 400,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5
+    width: 320,
   },
   boxImage: {
     width: 180,
@@ -132,14 +161,37 @@ const styles = StyleSheet.create({
   boxTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FD5D51',
-    marginTop: 15,
+    marginTop: 50,
     textAlign: 'center'
+  },
+  commonBoxTitle: {
+    color: '#3A7D44'
+  },
+  rareBoxTitle: {
+    color: '#DB0007'
+  },
+  exclusiveBoxTitle: {
+    color: '#FFBC0D'
+  },
+  currencyContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 10
+  },
+  coinImage: {
+    width: 24,
+    height: 24,
+  },
+  currencyText: {
+    color: 'black',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   boxPrice: {
     fontSize: 18,
-    color: '#ADBD50',
-    marginTop: 8,
+    color: 'black',
+    //marginTop: 8,
     fontWeight: '600'
   }
 });
