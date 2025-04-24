@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
@@ -32,6 +32,10 @@ export default function Order() {
   const router = useRouter();
   const { cart: cartParam } = useLocalSearchParams<{ cart: string }>();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCheckoutModalVisible, setIsCheckoutModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [savedCards, setSavedCards] = useState<string[]>([]); // Mock saved cards
 
   useEffect(() => {
     const loadCart = async () => {
@@ -66,8 +70,80 @@ export default function Order() {
     }
   };
 
+  const renderCheckoutModal = () => (
+    <Modal
+      visible={isCheckoutModalVisible}
+      transparent={true}
+      animationType="slide"
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Checkout</Text>
+          <Text style={styles.modalAmount}>Amount to Pay: ${calculateTotal()}</Text>
+
+          <Text style={styles.modalLabel}>Select a Card:</Text>
+          <ScrollView style={styles.cardList}>
+            {savedCards.map((card, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.cardItem,
+                  selectedCard === card && styles.selectedCard,
+                ]}
+                onPress={() => setSelectedCard(card)}
+              >
+                <Text style={styles.cardText}>{card}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.addCardButton}
+              onPress={() => {
+                const newCard = `Card ending in ${Math.floor(Math.random() * 10000)}`;
+                setSavedCards([...savedCards, newCard]);
+                setSelectedCard(newCard);
+              }}
+            >
+              <Text style={styles.addCardText}>+ Add New Card</Text>
+            </TouchableOpacity>
+          </ScrollView>
+
+          <TouchableOpacity
+            style={styles.payButton}
+            onPress={async () => {
+              setIsLoading(true);
+              setIsCheckoutModalVisible(false);
+
+              // Simulate payment processing
+              setTimeout(() => {
+                setIsLoading(false);
+                console.log('Payment processed successfully!');
+              }, 3000);
+            }}
+          >
+            <Text style={styles.payButtonText}>Pay</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.closeModalButton}
+            onPress={() => setIsCheckoutModalVisible(false)}
+          >
+            <Ionicons name="close" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <View style={styles.container}>
+      {renderCheckoutModal()}
+
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Processing Payment...</Text>
+        </View>
+      )}
+
       <TouchableOpacity 
         style={styles.backButton}
         onPress={async () => {
@@ -113,11 +189,11 @@ export default function Order() {
           <TouchableOpacity 
             style={styles.checkoutButton}
             onPress={() => {
-              // TODO Checkout functionality will be implemented later
               console.log('Checkout button pressed');
+              setIsCheckoutModalVisible(true);
             }}
           >
-            <Text style={styles.checkoutButtonText}>Checkout</Text>
+            <Text style={styles.checkoutButtonText}>Confirm order</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -226,4 +302,91 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#ff0000',
   },
-}); 
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalAmount: {
+    fontSize: 18,
+    marginBottom: 20,
+  },
+  modalLabel: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  cardList: {
+    width: '100%',
+    maxHeight: 150,
+    marginBottom: 20,
+  },
+  cardItem: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  selectedCard: {
+    borderColor: '#007BFF',
+    backgroundColor: '#E0F0FF',
+  },
+  cardText: {
+    fontSize: 16,
+  },
+  addCardButton: {
+    padding: 10,
+    backgroundColor: '#007BFF',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  addCardText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  payButton: {
+    backgroundColor: '#28a745',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  payButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  closeModalButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  loadingContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+});
