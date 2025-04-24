@@ -42,8 +42,8 @@ export default function Home() {
         myPet={user?._id ? {
           id: `pet-${user._id}`,
           name: 'me',
-          type: 1,
-          hat: 3,
+          type: 0,
+          hat: 2,
           eyes: 0,
           mouth: 0,
         } : null}
