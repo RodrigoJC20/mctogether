@@ -123,7 +123,7 @@ export default function Order() {
               console.log('Debug 2');
               //const { user } = useAuth(); // FIXME useAuth() is hanging
               console.log('Debug 3');
-              const orderResponse = await axios.post(`http://192.168.100.13:3000/payments/make-order`,
+              const orderResponse = await axios.post(`${PAYMENTS_API}/payments/make-order`,
                 {
                   partyId: orderId, // TODO get from the friends group
                   orderId: orderIdHash,
@@ -149,7 +149,7 @@ export default function Order() {
               const paymentResponse = await axios.post(`${PAYMENTS_API}/payments/pay`,
                 {
                   userEmail: "test1@example.com", //user?.email,
-                  partyId: "party-123", // TODO get from the friends group
+                  partyId: orderId, // TODO get from the friends group
                   orderId: orderIdHash,
                   paymentAmount: calculateTotal(),
                   paymentMethod: "CARD",
