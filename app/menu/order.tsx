@@ -122,6 +122,29 @@ export default function Order() {
               console.log('Debug 2');
               //const { user } = useAuth(); // FIXME useAuth() is hanging
               console.log('Debug 3');
+              const orderResponse = await axios.post(`http://192.168.100.16:3000/payments/make-order`,
+                {
+                  partyId: orderId, // TODO get from the friends group
+                  orderId: orderIdHash,
+                  restaurantId: "restaurant-123", // TODO get from the friends group
+                  members: [{
+                    userEmail: "test1@example.com", //user?.email,
+                    items: cartItems.map(item => ({
+                      menuItemId: item.id,
+                      quantity: item.quantity,
+                    })),
+                  }]
+                }
+              )
+
+              if (orderResponse.status !== 201) {
+                console.error('Order returned non success status:', orderResponse.data);
+              } else if (!orderResponse.data.success) {
+                console.error('Order sent non success response:', orderResponse.data.message);
+              } else {
+                console.log('Order successful:', orderResponse.data);
+              }
+
               const paymentResponse = await axios.post(`http://192.168.100.16:3000/payments/pay`,
                 {
                   userEmail: "test1@example.com", //user?.email,
@@ -154,13 +177,6 @@ export default function Order() {
               }
 
               setIsCheckoutModalVisible(false);
-
-              // Simulate payment processing
-              setTimeout(() => {
-                setIsLoading(false);
-                alert('Payment successful! Your order has been placed.');
-                clearCart();
-              }, 3000);
             }}
           >
             <Text style={styles.payButtonText}>Pay</Text>
