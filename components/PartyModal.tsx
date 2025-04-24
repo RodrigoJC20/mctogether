@@ -45,8 +45,8 @@ export const PartyModal: React.FC<PartyModalProps> = ({
   const handleCreateParty = async () => {
     if (!user?._id) return;
     try {
-      connect();
       await createParty(user._id);
+      connect();
     } catch (err) {
       console.error('Error creating party:', err);
     }
