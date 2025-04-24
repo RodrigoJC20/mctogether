@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal, SafeAreaView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
@@ -122,7 +122,7 @@ export default function Order() {
               console.log('Debug 2');
               //const { user } = useAuth(); // FIXME useAuth() is hanging
               console.log('Debug 3');
-              const orderResponse = await axios.post(`http://192.168.100.16:3000/payments/make-order`,
+              const orderResponse = await axios.post(`http://192.168.100.13:3000/payments/make-order`,
                 {
                   partyId: orderId, // TODO get from the friends group
                   orderId: orderIdHash,
@@ -195,7 +195,7 @@ export default function Order() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {renderCheckoutModal()}
 
       {isLoading && (
@@ -215,49 +215,56 @@ export default function Order() {
       
       <Text style={styles.title}>Order Summary</Text>
       
-      <ScrollView style={styles.orderList}>
-        {cartItems.length > 0 ? (
-          cartItems.map((item) => (
-            <View key={item.id} style={styles.orderItem}>
-              <Image 
-                source={getMenuImage(item.imageName)} 
-                style={styles.orderItemImage} 
-              />
-              <View style={styles.orderItemDetails}>
-                <Text style={styles.orderItemName}>{item.name}</Text>
-                <Text style={styles.orderItemPrice}>${item.price} x {item.quantity}</Text>
-                <Text style={styles.orderItemSubtotal}>
-                  Subtotal: ${(parseFloat(item.price) * item.quantity).toFixed(2)}
-                </Text>
+      {/* Main content container that takes most of the space but not all */}
+      <View style={styles.contentContainer}>
+        <ScrollView style={styles.orderList}>
+          {cartItems.length > 0 ? (
+            cartItems.map((item) => (
+              <View key={item.id} style={styles.orderItem}>
+                <Image 
+                  source={getMenuImage(item.imageName)} 
+                  style={styles.orderItemImage} 
+                />
+                <View style={styles.orderItemDetails}>
+                  <Text style={styles.orderItemName}>{item.name}</Text>
+                  <Text style={styles.orderItemPrice}>${item.price} x {item.quantity}</Text>
+                  <Text style={styles.orderItemSubtotal}>
+                    Subtotal: ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                  </Text>
+                </View>
               </View>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.emptyText}>Your cart is empty</Text>
-        )}
-      </ScrollView>
+            ))
+          ) : (
+            <Text style={styles.emptyText}>Your cart is empty</Text>
+          )}
+        </ScrollView>
 
-      <View style={styles.footer}>
-        <Text style={styles.totalText}>Total: ${calculateTotal()}</Text>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={styles.clearButton}
-            onPress={clearCart}
-          >
-            <Ionicons name="trash-outline" size={24} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.checkoutButton}
-            onPress={() => {
-              console.log('Checkout button pressed');
-              setIsCheckoutModalVisible(true);
-            }}
-          >
-            <Text style={styles.checkoutButtonText}>Confirm order</Text>
-          </TouchableOpacity>
+        {/* Footer now inside the content container but after the scroll view */}
+        <View style={styles.footer}>
+          <Text style={styles.totalText}>Total: ${calculateTotal()}</Text>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity 
+              style={styles.clearButton}
+              onPress={clearCart}
+            >
+              <Ionicons name="trash-outline" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.checkoutButton}
+              onPress={() => {
+                console.log('Checkout button pressed');
+                setIsCheckoutModalVisible(true);
+              }}
+            >
+              <Text style={styles.checkoutButtonText}>Confirm order</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
+      
+      {/* Add an empty view at the bottom to provide space for any external footer elements */}
+      <View style={styles.bottomSpacer} />
+    </SafeAreaView>
   );
 }
 
@@ -265,14 +272,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
-    paddingTop: 60,
+  },
+  contentContainer: {
+    flex: 1,
+    paddingTop: 10,
+    paddingBottom: 20, // Add some padding at the bottom to push content up
   },
   title: {
     color: '#000000',
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 20,
+    marginTop: 60,
+    marginBottom: 10,
   },
   backButton: {
     position: 'absolute',
@@ -286,6 +298,7 @@ const styles = StyleSheet.create({
   orderList: {
     flex: 1,
     padding: 20,
+    paddingBottom: 10, // Reduced padding to bring footer closer to items
   },
   emptyText: {
     textAlign: 'center',
@@ -294,10 +307,23 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   footer: {
-    padding: 20,
+    padding: 15,
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
     backgroundColor: '#ffffff',
+    marginHorizontal: 20, // Add horizontal margin to make footer slightly narrower
+    borderRadius: 10, // Add rounded corners to make it look like a card
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  bottomSpacer: {
+    height: 40, // Adjust this value based on how much space you need for the external footer button
   },
   buttonContainer: {
     flexDirection: 'row',
