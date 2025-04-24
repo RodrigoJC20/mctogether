@@ -1,35 +1,23 @@
-import { Slot, useRouter, useSegments } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { View, Text } from 'react-native';
+import { Stack, Slot } from 'expo-router';
 import { AuthProvider, useAuth } from '../hooks/useAuth';
-import { useEffect } from 'react';
-import React from 'react';
+import { PartyProvider } from '../hooks/usePartyState';
+import React, { useEffect } from 'react';
+import { WebSocketProvider } from '@/context/websocketContext';
+import { useRouter } from 'expo-router';
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
-  const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return;
-
-    const inAuthGroup = segments[0] === ('auth' as string);
-
-    if (!user && !inAuthGroup) {
-      // Redirect to the auth page if not authenticated
-      router.replace('/auth' as any);
-    } else if (user && inAuthGroup) {
-      // Redirect to the home page if authenticated
-      router.replace('/');
+    if (!isLoading && !user) {
+      // Use replace to avoid adding to navigation history
+      router.replace('/auth');
     }
-  }, [user, isLoading, segments]);
+  }, [user, isLoading]);
 
   if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Loading...</Text>
-      </View>
-    );
+    return <Stack screenOptions={{ headerShown: false }} />;
   }
 
   return <>{children}</>;
@@ -38,12 +26,17 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 export default function Layout() {
   return (
     <AuthProvider>
-      <AuthGuard>
-        <View style={{ flex: 1 }}>
-          <Slot />
-          <StatusBar style="light" />
-        </View>
-      </AuthGuard>
+      <PartyProvider>
+        <AuthGuard>
+          <WebSocketProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+              }}
+            />
+          </WebSocketProvider>
+        </AuthGuard>
+      </PartyProvider>
     </AuthProvider>
   );
 }
