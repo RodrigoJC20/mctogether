@@ -3,6 +3,7 @@ import { View, TouchableOpacity, Text, Modal, Image, ScrollView, StyleSheet } fr
 import { Ionicons } from '@expo/vector-icons';
 import { QRCodeComponent } from './QRCode';
 import { useAuth } from '../hooks/useAuth';
+import { useWebSocket } from '@/context/websocketContext';
 import { usePartyState } from '../hooks/usePartyState';
 
 interface PartyModalProps {
@@ -15,6 +16,7 @@ export const PartyModal: React.FC<PartyModalProps> = ({
   onClose,
 }) => {
   const { user } = useAuth();
+  const { connect, disconnect, isConnected, sendMessage } = useWebSocket();
   const { 
     groupId,
     members,
@@ -27,17 +29,24 @@ export const PartyModal: React.FC<PartyModalProps> = ({
     fetchPartyMembers,
   } = usePartyState();
 
-  // Fetch party members when modal is visible and in QR mode
   useEffect(() => {
     if (visible && mode === 'qr' && groupId) {
       fetchPartyMembers(groupId);
     }
   }, [visible, mode, groupId, fetchPartyMembers]);
 
+  useEffect(() => {
+    if (isConnected) {
+      console.log("Connection established, sending test message");
+      sendMessage("Hello from Party App!"); 
+    }
+  }, [isConnected, sendMessage]);
+
   const handleCreateParty = async () => {
     if (!user?._id) return;
     try {
       await createParty(user._id);
+      connect();
     } catch (err) {
       console.error('Error creating party:', err);
     }
@@ -48,6 +57,7 @@ export const PartyModal: React.FC<PartyModalProps> = ({
     try {
       await leaveParty(user._id);
       onClose();
+      disconnect();
     } catch (err) {
       console.error('Error leaving party:', err);
     }
@@ -75,7 +85,7 @@ export const PartyModal: React.FC<PartyModalProps> = ({
             <Text style={styles.closeCrossText}>×</Text>
           </TouchableOpacity>
 
-          {mode === 'scan' ? (
+          {mode === "scan" ? (
             <>
               <Text style={styles.modalText}>Scan QR Code</Text>
               <QRCodeComponent 
@@ -105,7 +115,6 @@ export const PartyModal: React.FC<PartyModalProps> = ({
                     <View key={member.userId} style={styles.memberItem}>
                       <Text style={styles.memberText}>
                         {member.username}
-                        {member.role === 'leader' && ' (Leader)'}
                       </Text>
                     </View>
                   ))}

@@ -2,6 +2,7 @@ import { Stack, Slot } from 'expo-router';
 import { AuthProvider, useAuth } from '../hooks/useAuth';
 import { PartyProvider } from '../hooks/usePartyState';
 import React, { useEffect } from 'react';
+import { WebSocketProvider } from '@/context/websocketContext';
 import { useRouter } from 'expo-router';
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -27,11 +28,13 @@ export default function Layout() {
     <AuthProvider>
       <PartyProvider>
         <AuthGuard>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-            }}
-          />
+          <WebSocketProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+              }}
+            />
+          </WebSocketProvider>
         </AuthGuard>
       </PartyProvider>
     </AuthProvider>
