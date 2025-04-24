@@ -98,7 +98,7 @@ export default function Order() {
             <TouchableOpacity
               style={styles.addCardButton}
               onPress={() => {
-                const newCard = `Card ending in ${Math.floor(Math.random() * 10000)}`;
+                const newCard = `Card ending in **** ${Math.floor(Math.random() * 9000) + 1000}`;
                 setSavedCards([...savedCards, newCard]);
                 setSelectedCard(newCard);
               }}
