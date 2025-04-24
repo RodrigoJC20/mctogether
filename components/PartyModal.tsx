@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, TouchableOpacity, Text, Modal, Image, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { QRCodeComponent } from './QRCode';
 import { useGroup } from '../hooks/useGroup';
 import { useAuth } from '../hooks/useAuth';
 import { groupApi } from '../api/client';
+
+type PartyMode = 'menu' | 'scan' | 'qr';
 
 interface PartyModalProps {
   visible: boolean;
@@ -16,7 +18,8 @@ interface PartyModalProps {
   onJoinParty: () => void;
   onQRScanned: (data: string) => Promise<boolean>;
   loading: boolean;
-  mode: 'scan' | 'display';
+  mode: PartyMode;
+  setMode: (mode: PartyMode) => void;
 }
 
 export const PartyModal: React.FC<PartyModalProps> = ({
@@ -29,42 +32,15 @@ export const PartyModal: React.FC<PartyModalProps> = ({
   onJoinParty,
   onQRScanned,
   loading,
-  mode
+  mode,
+  setMode
 }) => {
   const { user } = useAuth();
-  const { leaveCurrentGroup, loading: leaveLoading, fetchGroupMembers } = useGroup(user?._id || '');
-  const [currentUser, setCurrentUser] = useState(user);
-
-  // Fetch fresh user info when modal opens
-  useEffect(() => {
-    const refreshUserInfo = async () => {
-      if (visible && user?._id) {
-        try {
-          const freshUserInfo = await groupApi.getUser(user._id);
-          setCurrentUser(freshUserInfo);
-          
-          // If user is in a group, fetch members
-          if (freshUserInfo.groupId) {
-            await fetchGroupMembers();
-          }
-        } catch (err) {
-          console.error('Error refreshing user info:', err);
-        }
-      }
-    };
-
-    refreshUserInfo();
-  }, [visible, user?._id, fetchGroupMembers]);
+  const { leaveCurrentGroup, loading: leaveLoading } = useGroup(user?._id || '');
 
   const handleCreateParty = async () => {
     try {
       await onCreateParty();
-      // Update local state immediately after successful party creation
-      if (user?._id) {
-        const freshUserInfo = await groupApi.getUser(user._id);
-        setCurrentUser(freshUserInfo);
-        await fetchGroupMembers();
-      }
     } catch (err) {
       console.error('Error creating party:', err);
     }
@@ -72,9 +48,14 @@ export const PartyModal: React.FC<PartyModalProps> = ({
 
   const handleLeaveParty = async () => {
     if (user?._id) {
-      await leaveCurrentGroup(user._id);
-      setCurrentUser(null);
-      onClose();
+      try {
+        await leaveCurrentGroup(user._id);
+        // Reset all states
+        setMode('menu');
+        onClose();
+      } catch (err) {
+        console.error('Error leaving party:', err);
+      }
     }
   };
 
@@ -89,12 +70,28 @@ export const PartyModal: React.FC<PartyModalProps> = ({
             <Text style={styles.closeCrossText}>×</Text>
           </TouchableOpacity>
 
-          {currentUser?.groupId ? (
+          {mode === 'scan' ? (
+            <>
+              <Text style={styles.modalText}>Scan QR Code</Text>
+              <QRCodeComponent 
+                mode="scan"
+                onScan={onQRScanned}
+              />
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]} 
+                onPress={() => {
+                  setMode('menu');  // Just reset mode, don't close modal
+                }}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </>
+          ) : mode === 'qr' ? (
             <>
               <Text style={styles.modalText}>Your Party</Text>
-              {showQR && currentUser.groupId && (
+              {showQR && user?.groupId && (
                 <QRCodeComponent 
-                  groupId={currentUser.groupId} 
+                  groupId={user.groupId} 
                   mode="display"
                 />
               )}
@@ -111,20 +108,6 @@ export const PartyModal: React.FC<PartyModalProps> = ({
                 disabled={leaveLoading}
               >
                 <Text style={styles.buttonText}>Leave Party</Text>
-              </TouchableOpacity>
-            </>
-          ) : mode === 'scan' ? (
-            <>
-              <Text style={styles.modalText}>Scan QR Code</Text>
-              <QRCodeComponent 
-                mode="scan"
-                onScan={onQRScanned}
-              />
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]} 
-                onPress={() => onClose()}
-              >
-                <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
             </>
           ) : (

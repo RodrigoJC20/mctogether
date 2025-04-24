@@ -14,19 +14,21 @@ export default function Home() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { modalVisible, setModalVisible } = useUIState();
-  const { showQR, setShowQR, mode, setMode, loading, error, groupId, members, handleCreateParty, handleJoinParty, handleQRScanned, fetchGroupMembers } = useQRCode();
+  const { showQR, mode, setMode, loading, members, handleCreateParty, handleJoinParty, handleQRScanned } = useQRCode();
   const { myPet, friendPets, showDebugPerimeter, toggleDebugPerimeter } = usePets(
-    groupId || null, 
+    user?.groupId || null, 
     user?._id || null, 
     members.map(memberId => ({ userId: memberId, role: 'member' })) || []
   );
 
-  // Close modal when joining a group
+  // Close modal only when completing a join (transitioning from scan to qr)
   useEffect(() => {
-    if (groupId && modalVisible && mode === 'scan') {
+    const isJoining = mode === 'qr' && user?.groupId && modalVisible;
+    const wasScanning = mode === 'scan';
+    if (isJoining && wasScanning) {
       setModalVisible(false);
     }
-  }, [groupId, modalVisible, mode]);
+  }, [user?.groupId, modalVisible, mode]);
 
   const handleQRScannedWrapper = async (data: string): Promise<boolean> => {
     try {
@@ -42,13 +44,8 @@ export default function Home() {
     await logout();
   };
 
-  const handlePartyButton = async () => {
+  const handlePartyButton = () => {
     setModalVisible(true);
-    // If we're in a group, show the QR code and fetch latest members
-    if (groupId) {
-      await fetchGroupMembers(groupId);
-      setShowQR(true);
-    }
   };
   
   return (
@@ -120,10 +117,8 @@ export default function Home() {
         visible={modalVisible}
         onClose={() => {
           setModalVisible(false);
-          setShowQR(false);
-          setMode('display');
         }}
-        groupId={groupId}
+        groupId={user?.groupId || null}
         members={members}
         showQR={showQR}
         onCreateParty={handleCreateParty}
@@ -133,6 +128,7 @@ export default function Home() {
         onQRScanned={handleQRScannedWrapper}
         loading={loading}
         mode={mode}
+        setMode={setMode}
       />
     </ImageBackground>
   );

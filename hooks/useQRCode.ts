@@ -1,67 +1,161 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { useAuth } from './useAuth';
-import { fetchWithAuth } from '../api/authApi';
 import Constants from 'expo-constants';
 import { groupApi } from '../api/client';
 
 const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://localhost:3000';
 
+interface ApiError {
+  response?: {
+    status: number;
+  };
+}
+
+type PartyMode = 'menu' | 'scan' | 'qr';
+
 export const useQRCode = () => {
-  const [showQR, setShowQR] = useState(false);
-  const [mode, setMode] = useState<'scan' | 'display'>('display');
+  const [mode, setMode] = useState<PartyMode>('menu');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [groupId, setGroupId] = useState<string | null>(null);
   const [members, setMembers] = useState<string[]>([]);
-  const { user, token } = useAuth();
+  const { user, token, refreshUser } = useAuth();
 
-  const fetchGroupMembers = async (gId: string) => {
+  // Effect to reset state when user is not in a group
+  useEffect(() => {
+    let mounted = true;
+    
+    if (!user?.groupId) {
+      if (mounted) {
+        // Complete state reset when leaving group
+        setMembers([]);
+        setMode('menu');
+        setError(null);
+        setLoading(false);
+      }
+    } else if (mounted) {
+      // When in a group, always show QR
+      setMode('qr');
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [user?.groupId]);
+
+  // Derive showQR directly from user's group status and mode
+  const showQR = !!user?.groupId && mode === 'qr';
+
+  const fetchGroupMembers = useCallback(async () => {
+    // Don't fetch if we're not in a group
+    if (!token || !user?.groupId) {
+      setMembers([]);
+      return;
+    }
+
     try {
-      if (!token) return;
-      const group = await groupApi.getGroup(gId);
-      setMembers(group.members || []);
+      const group = await groupApi.getGroup(user.groupId);
+      if (group?.members) {
+        setMembers(group.members);
+      }
     } catch (err) {
-      console.error('Failed to fetch group members:', err);
+      console.error('Error fetching group members:', err);
+      const apiError = err as ApiError;
+      if (apiError?.response?.status === 404) {
+        // Complete state reset on 404
+        setMembers([]);
+        setMode('menu');
+        setError(null);
+        setLoading(false);
+        await refreshUser();
+      }
+    }
+  }, [token, user?.groupId, refreshUser]);
+
+  const handleLeaveGroup = async (groupId: string, userId: string) => {
+    try {
+      setLoading(true);
+      await groupApi.leaveGroup(groupId, userId);
+      // Complete state reset after leaving
+      setMembers([]);
+      setMode('menu');
+      setError(null);
+      await refreshUser();
+    } catch (err) {
+      console.error('Error leaving group:', err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Effect to sync with user's group status
-  useEffect(() => {
-    if (user?.groupId) {
-      setGroupId(user.groupId);
-      fetchGroupMembers(user.groupId);
-    } else {
-      // Clear state when user has no group
-      setGroupId(null);
-      setMembers([]);
-      setShowQR(false);
-      setMode('display');
-    }
-  }, [user?.groupId]);
+  const handleQRScanned = async (data: string) => {
+    try {
+      if (!token || !user) {
+        throw new Error('No authentication token or user available');
+      }
+      setLoading(true);
+      setError(null);
+      
+      // Get fresh user state first
+      const freshUserInfo = await groupApi.getUser(user._id);
+      
+      if (freshUserInfo.groupId) {
+        Alert.alert(
+          'Leave Current Group?',
+          'You are already in a group. Would you like to leave it and join this one?',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {
+              text: 'Leave & Join New',
+              onPress: async () => {
+                try {
+                  setLoading(true);
+                  // Use handleLeaveGroup for consistent cleanup
+                  await handleLeaveGroup(freshUserInfo.groupId, user._id);
+                  await joinGroup(data);
+                } catch (err) {
+                  console.error('Error leaving group and joining new:', err);
+                  Alert.alert('Error', 'Failed to leave group and join new one. Please try again.');
+                } finally {
+                  setLoading(false);
+                }
+              },
+            },
+          ]
+        );
+        return false;
+      }
 
-  const handlePartyButton = async () => {
-    if (user?.groupId) {
-      await fetchGroupMembers(user.groupId);
+      return await joinGroup(data);
+    } catch (err: any) {
+      console.error('Failed to handle QR scan:', err);
+      Alert.alert('Error', 'Failed to process QR code. Please try again.');
+      return false;
+    } finally {
+      setLoading(false);
     }
-    setShowQR(true);
   };
 
   const handleCreateParty = async () => {
     try {
       console.log('handleCreateParty called');
-      if (!token) {
-        console.log('No token available');
-        throw new Error('No authentication token available');
+      if (!token || !user?._id) {
+        console.log('No token or user available');
+        throw new Error('No authentication token or user available');
       }
 
-      // First check if user is already in a group by getting current state
-      console.log('Checking current user state');
-      const currentUser = await fetchWithAuth(`${API_BASE_URL}/auth/me`, token, {});
-      console.log('Current user state:', currentUser);
+      setLoading(true);
+      setError(null);
 
-      if (currentUser?.groupId) {
-        console.log('User is already in group:', currentUser.groupId);
+      // Get fresh user state first
+      const freshUserInfo = await groupApi.getUser(user._id);
+      
+      if (freshUserInfo.groupId) {
+        console.log('User is already in group:', freshUserInfo.groupId);
         Alert.alert(
           'Leave Current Group?',
           'You are already in a group. Would you like to leave it and create a new one?',
@@ -74,32 +168,16 @@ export const useQRCode = () => {
               text: 'Leave & Create New',
               onPress: async () => {
                 try {
-                  console.log('User confirmed leaving group');
                   setLoading(true);
-
-                  // Leave the current group using the correct endpoint
-                  console.log('Making DELETE request to:', `${API_BASE_URL}/groups/${currentUser.groupId}`);
-                  await fetchWithAuth(`${API_BASE_URL}/groups/${currentUser.groupId}`, token, {
-                    method: 'DELETE',
-                  });
-                  console.log('Successfully left group');
-
-                  // Clear local state
-                  setGroupId(null);
+                  await groupApi.leaveGroup(freshUserInfo.groupId, user._id);
+                  // Clear state immediately
                   setMembers([]);
-
-                  // Now create a new group
-                  console.log('Creating new group after leaving');
-                  try {
-                    await createNewGroup();
-                    console.log('Successfully created new group after leaving');
-                  } catch (createErr) {
-                    console.error('Failed to create new group after leaving:', createErr);
-                    Alert.alert('Error', 'Failed to create new group after leaving. Please try again.');
-                  }
-                } catch (leaveErr) {
-                  console.error('Failed to leave group:', leaveErr);
-                  Alert.alert('Error', 'Failed to leave current group. Please try again.');
+                  setMode('menu');
+                  await refreshUser();
+                  await createNewGroup();
+                } catch (err) {
+                  console.error('Error leaving group and creating new:', err);
+                  Alert.alert('Error', 'Failed to leave group and create new one. Please try again.');
                 } finally {
                   setLoading(false);
                 }
@@ -110,57 +188,43 @@ export const useQRCode = () => {
         return;
       }
 
-      console.log('No existing group found, creating new one');
       await createNewGroup();
     } catch (err: any) {
       console.error('Failed to create party:', err);
-      if (err.message?.includes('HTTP error! status: 400')) {
-        console.log('Received 400 error with message:', err.message);
-        Alert.alert(
-          'Error',
-          'Failed to create party. Please try again.',
-          [
-            {
-              text: 'OK',
-              style: 'cancel',
-            },
-          ]
-        );
-      } else {
-        setError('Failed to create party. Please try again.');
-      }
+      Alert.alert(
+        'Error',
+        'Failed to create party. Please try again.',
+        [{ text: 'OK', style: 'cancel' }]
+      );
+      setError('Failed to create party. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const createNewGroup = async () => {
     try {
-      console.log('createNewGroup called');
-      if (!token) {
-        console.log('No token available in createNewGroup');
-        throw new Error('No authentication token available');
+      if (!token || !user) {
+        throw new Error('No authentication token or user available');
       }
+      
       setLoading(true);
       setError(null);
-      console.log('Creating party with token:', token);
-      const response = await fetchWithAuth(`${API_BASE_URL}/groups`, token, {
-        method: 'POST',
-        body: JSON.stringify({
-          name: user?.username ? `${user.username}'s Party` : 'New Party'
-        }),
-      });
+      
+      const response = await groupApi.createGroup(user._id, user.username ? `${user.username}'s Party` : 'New Party');
       console.log('Party creation response:', response);
-      setGroupId(response._id);
-      setMembers(response.members);
       
-      // Fetch latest members to ensure we have up-to-date data
-      await fetchGroupMembers(response._id);
+      // Update members immediately with the response
+      setMembers(response.members || []);
+      setMode('qr');
       
-      setMode('display');
-      setShowQR(true);
-      return response; // Return the response for error handling
+      // Refresh user state to get updated groupId
+      await refreshUser();
+      
+      return response;
     } catch (err) {
       console.error('Failed to create party in createNewGroup:', err);
-      throw err; // Re-throw to be handled by the caller
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -168,89 +232,38 @@ export const useQRCode = () => {
 
   const handleJoinParty = () => {
     setMode('scan');
-    setShowQR(true);
   };
 
-  const handleQRScanned = async (data: string) => {
+  const joinGroup = async (groupId: string) => {
     try {
       if (!token || !user) {
         throw new Error('No authentication token or user available');
       }
-      setLoading(true);
-      setError(null);
-      
-      // Get the group info first to check if the group is active
-      const group = await fetchWithAuth(`${API_BASE_URL}/groups/${data}`, token, {});
-      
-      if (group.status === 'disbanded') {
-        Alert.alert(
-          'Group Disbanded',
-          'This group has been disbanded. Would you like to create a new group?',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-            {
-              text: 'Create New Group',
-              onPress: handleCreateParty,
-            },
-          ]
-        );
-        return false;
-      }
 
-      if (group.leaderId === user?._id) {
-        Alert.alert('Error', 'You cannot join your own group!');
-        return false;
-      }
+      // Get the group info first
+      const group = await groupApi.getGroup(groupId);
       
       // Join the group
-      const updatedGroup = await groupApi.joinGroup(data, user._id);
+      const updatedGroup = await groupApi.joinGroup(groupId, user._id);
+      setMembers(updatedGroup.members || []);
+      setMode('qr');
       
-      setGroupId(updatedGroup._id);
-      setMembers(updatedGroup.members);
+      // Refresh user state to get updated groupId
+      await refreshUser();
       
-      // Fetch latest members to ensure we have up-to-date data
-      await fetchGroupMembers(updatedGroup._id);
-      
-      setShowQR(false);
-      setMode('display');
-      return true; // Indicate successful join
-    } catch (err: any) {
-      console.error('Failed to join party:', err);
-      if (err.message === 'Group is not active') {
-        Alert.alert(
-          'Group Not Active',
-          'This group is no longer active. Would you like to create a new group?',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-            {
-              text: 'Create New Group',
-              onPress: handleCreateParty,
-            },
-          ]
-        );
-      } else {
-        Alert.alert('Error', 'Failed to join the group. Please try again.');
-      }
-      return false; // Indicate failed join
-    } finally {
-      setLoading(false);
+      return true;
+    } catch (err) {
+      console.error('Failed to join group:', err);
+      throw err;
     }
   };
 
   return {
     showQR,
-    setShowQR,
     mode,
     setMode,
     loading,
     error,
-    groupId,
     members,
     handleCreateParty,
     handleJoinParty,

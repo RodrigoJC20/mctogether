@@ -4,7 +4,6 @@ import { useAuth } from './useAuth';
 
 interface GroupMember {
   userId: string;
-  role: 'leader' | 'member';
 }
 
 export const useGroup = (currentUserId: string) => {
@@ -16,84 +15,138 @@ export const useGroup = (currentUserId: string) => {
 
   // Effect to sync with user's group status
   useEffect(() => {
+    let mounted = true;
+    
     if (user?.groupId) {
-      setGroupId(user.groupId);
+      if (mounted) setGroupId(user.groupId);
     } else {
-      setGroupId(null);
-      setMembers([]);
+      if (mounted) {
+        setGroupId(null);
+        setMembers([]);
+      }
     }
+
+    return () => {
+      mounted = false;
+    };
   }, [user?.groupId]);
 
   const fetchGroupMembers = useCallback(async () => {
-    if (!groupId) return;
-    
-    try {
-      const group = await groupApi.getGroup(groupId);
-      // Include all members, including the current user
-      const allMembers = group.members
-        .map((userId: string) => ({
-          userId,
-          role: userId === group.leaderId ? 'leader' : 'member'
-        }));
-      
-      setMembers(allMembers);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching group members:', err);
-      setError('Failed to sync group members');
-    }
-  }, [groupId, currentUserId]);
-
-  // Set up polling for group members
-  useEffect(() => {
     if (!groupId) {
       setMembers([]);
       return;
     }
+    
+    try {
+      const group = await groupApi.getGroup(groupId);
+      // Map members to simple objects with just userId
+      const allMembers = group.members.map((userId: string) => ({ userId }));
+      
+      setMembers(allMembers);
+      setError(null);
+    } catch (err: any) {
+      console.error('Error fetching group members:', err);
+      // If group not found, clear group state
+      if (err?.response?.status === 404) {
+        setGroupId(null);
+        setMembers([]);
+        setError('Group no longer exists');
+      } else {
+        setError('Failed to sync group members');
+      }
+    }
+  }, [groupId]);
 
-    // Initial fetch
-    fetchGroupMembers();
+  // Effect for keeping members in sync
+  useEffect(() => {
+    let mounted = true;
+    
+    if (!groupId) {
+      if (mounted) setMembers([]);
+      return;
+    }
 
-    // Set up polling interval
-    const interval = setInterval(fetchGroupMembers, 5000);
+    const syncMembers = async () => {
+      if (!mounted) return;
+      await fetchGroupMembers();
+    };
+
+    syncMembers();
 
     return () => {
-      clearInterval(interval);
+      mounted = false;
     };
   }, [groupId, fetchGroupMembers]);
 
   const leaveCurrentGroup = async (userId: string) => {
     try {
       console.log('useGroup: Leaving current group for userId:', userId);
-      if (groupId) {
-        await groupApi.leaveGroup(groupId, userId);
-        // Clear local state immediately after successful leave
-        setGroupId(null);
-        setMembers([]);
-      } else {
-        // If we don't have a groupId stored, we need to fetch user info to get their group
+      
+      let groupIdToLeave = groupId;
+      
+      // If we don't have a groupId stored, fetch user info to get their group
+      if (!groupIdToLeave) {
         const userInfo = await groupApi.getUser(userId);
-        if (userInfo.groupId) {
-          await groupApi.leaveGroup(userInfo.groupId, userId);
-          // Clear local state
-          setGroupId(null);
-          setMembers([]);
+        groupIdToLeave = userInfo.groupId;
+      }
+      
+      // Clear local state immediately to prevent stale UI
+      setGroupId(null);
+      setMembers([]);
+      setError(null);
+      
+      if (groupIdToLeave) {
+        try {
+          await groupApi.leaveGroup(groupIdToLeave, userId);
+        } catch (err: any) {
+          // If the group doesn't exist, that's fine - just continue
+          if (err?.response?.status !== 404) {
+            throw err;
+          }
         }
       }
+
+      // After leaving, fetch fresh user info to ensure UI updates
+      await groupApi.getUser(userId);
     } catch (err) {
       console.error('useGroup: Error leaving group:', err);
       throw err;
     }
   };
 
+  // Effect to cleanup stale group data
+  useEffect(() => {
+    const cleanup = async () => {
+      if (groupId && !user?.groupId) {
+        // If we have a local groupId but user doesn't have one, clear local state
+        setGroupId(null);
+        setMembers([]);
+        setError(null);
+      }
+    };
+    
+    cleanup();
+  }, [groupId, user?.groupId]);
+
   const createGroup = async (userId: string, name?: string) => {
     try {
       console.log('useGroup: Creating group with userId:', userId);
       setLoading(true);
       setError(null);
+
+      // Create the group
       const response = await groupApi.createGroup(userId, name);
       console.log('useGroup: Group created successfully:', response);
+      
+      // Update local state
       setGroupId(response._id);
+      
+      // Set initial members list immediately for quick UI update
+      setMembers([{ userId }]);
+
+      // Fetch fresh group data to ensure we have the latest state
+      await fetchGroupMembers();
+
       return response;
     } catch (err: any) {
       console.error('useGroup: Error creating group:', err);
@@ -105,7 +158,14 @@ export const useGroup = (currentUserId: string) => {
           // Try creating the group again
           const response = await groupApi.createGroup(userId, name);
           console.log('useGroup: Group created successfully after leaving:', response);
+          
+          // Update local state
           setGroupId(response._id);
+          setMembers([{ userId }]);
+
+          // Fetch fresh group data
+          await fetchGroupMembers();
+          
           return response;
         } catch (retryErr) {
           console.error('useGroup: Error in retry after leaving group:', retryErr);
@@ -128,9 +188,17 @@ export const useGroup = (currentUserId: string) => {
       console.log('useGroup: Joining group:', { groupId, userId });
       setLoading(true);
       setError(null);
+
+      // Join the group
       const response = await groupApi.joinGroup(groupId, userId);
       console.log('useGroup: Joined group successfully:', response);
+      
+      // Update local state
       setGroupId(groupId);
+      
+      // Fetch fresh group data to get the latest members list
+      await fetchGroupMembers();
+
       return response;
     } catch (err: any) {
       console.error('useGroup: Error joining group:', err);
@@ -142,7 +210,13 @@ export const useGroup = (currentUserId: string) => {
           // Try joining the group again
           const response = await groupApi.joinGroup(groupId, userId);
           console.log('useGroup: Group joined successfully after leaving:', response);
+          
+          // Update local state
           setGroupId(groupId);
+          
+          // Fetch fresh group data
+          await fetchGroupMembers();
+          
           return response;
         } catch (retryErr) {
           console.error('useGroup: Error in retry after leaving group:', retryErr);
