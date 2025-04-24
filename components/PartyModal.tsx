@@ -3,7 +3,6 @@ import { View, TouchableOpacity, Text, Modal, Image, ScrollView, StyleSheet } fr
 import { Ionicons } from '@expo/vector-icons';
 import { QRCodeComponent } from './QRCode';
 import { useAuth } from '../hooks/useAuth';
-import { useWebSocket } from '@/context/websocketContext';
 import { usePartyState } from '../hooks/usePartyState';
 
 interface PartyModalProps {
@@ -16,7 +15,6 @@ export const PartyModal: React.FC<PartyModalProps> = ({
   onClose,
 }) => {
   const { user } = useAuth();
-  const { connect, disconnect, isConnected, sendMessage } = useWebSocket();
   const { 
     groupId,
     members,
@@ -39,18 +37,10 @@ export const PartyModal: React.FC<PartyModalProps> = ({
     }
   }, [visible, mode, groupId, fetchPartyMembers, isJoining]);
 
-  useEffect(() => {
-    if (isConnected) {
-      console.log("Connection established, sending test message");
-      sendMessage("Hello from Party App!"); 
-    }
-  }, [isConnected, sendMessage]);
-
   const handleCreateParty = async () => {
     if (!user?._id) return;
     try {
       await createParty(user._id);
-      connect();
     } catch (err) {
       console.error('Error creating party:', err);
     }
@@ -61,7 +51,6 @@ export const PartyModal: React.FC<PartyModalProps> = ({
     try {
       await leaveParty(user._id);
       onClose();
-      disconnect();
     } catch (err) {
       console.error('Error leaving party:', err);
     }
