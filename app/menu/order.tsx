@@ -19,6 +19,7 @@ interface CartItem {
 
 // Get fallback image
 const FALLBACK_IMAGE = require('../../assets/images/menu/null.png');
+const PAYMENTS_API = 'http://192.168.100.16:3000';
 
 // Function to safely get image with fallback
 const getMenuImage = (imageName: string) => {
@@ -122,7 +123,7 @@ export default function Order() {
               console.log('Debug 2');
               //const { user } = useAuth(); // FIXME useAuth() is hanging
               console.log('Debug 3');
-              const orderResponse = await axios.post(`http://192.168.100.16:3000/payments/make-order`,
+              const orderResponse = await axios.post(`${PAYMENTS_API}/payments/make-order`,
                 {
                   partyId: orderId, // TODO get from the friends group
                   orderId: orderIdHash,
@@ -145,7 +146,7 @@ export default function Order() {
                 console.log('Order successful:', orderResponse.data);
               }
 
-              const paymentResponse = await axios.post(`http://192.168.100.16:3000/payments/pay`,
+              const paymentResponse = await axios.post(`${PAYMENTS_API}/payments/pay`,
                 {
                   userEmail: "test1@example.com", //user?.email,
                   partyId: "party-123", // TODO get from the friends group
