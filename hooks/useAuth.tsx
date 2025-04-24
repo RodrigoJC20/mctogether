@@ -109,6 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       await AsyncStorage.setItem('jwt', data.token);
+      // Clear the cart when user logs in
+      await AsyncStorage.setItem('cart', JSON.stringify([]));
       setToken(data.token);
       setUser(data.user);
       router.replace('/');
