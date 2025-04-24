@@ -54,14 +54,10 @@ export default function Coupons() {
   
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.backButton}
-        onPress={() => router.back()}
-      >
-        <Ionicons name="arrow-back" size={24} color="white" />
-      </TouchableOpacity>
-      
-      <Text style={styles.title}>Your Coupons</Text>
+      <Text style={styles.logoText}>
+        <Text style={styles.logoTextMc}>Mc</Text>
+        <Text style={styles.logoTextTogether}>Coupons</Text>
+      </Text>
       
       <ScrollView contentContainerStyle={styles.couponsGrid}>
         {mockCoupons.map(renderCoupon)}
@@ -163,6 +159,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 5,
+  },
+  logoText: {
+    fontSize: 22,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  logoTextMc: {
+    color: '#FFBC0D', // McDonald's yellow
+  },
+  logoTextTogether: {
+    color: 'black',
   },
   validUntilText: {
     color: '#666',

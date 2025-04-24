@@ -110,7 +110,10 @@ export default function Menu() {
         <Ionicons name="arrow-back" size={24} color="white" />
       </TouchableOpacity>
       
-      <Text style={styles.title}>Menu</Text>
+      <Text style={styles.logoText}>
+        <Text style={styles.logoTextMc}>Mc</Text>
+        <Text style={styles.logoTextTogether}>Menu</Text>
+      </Text>
       
       <ScrollView contentContainerStyle={styles.menuGrid}>
         {menuData.menuItems.map((item) => {
@@ -244,6 +247,17 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
     zIndex: 10
+  },
+  logoText: {
+    fontSize: 22,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  logoTextMc: {
+    color: '#FFBC0D', // McDonald's yellow
+  },
+  logoTextTogether: {
+    color: 'black',
   },
   menuGrid: {
     flexDirection: 'row',

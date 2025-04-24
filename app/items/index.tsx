@@ -15,13 +15,6 @@ export default function Items() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.backButton}
-        onPress={() => router.back()}
-      >
-        <Ionicons name="arrow-back" size={24} color="white" />
-      </TouchableOpacity>
-      
       {/* Top section - Focused image */}
       <View style={styles.topSection}>
         <Image 
@@ -98,6 +91,16 @@ const styles = StyleSheet.create({
   focusedImage: {
     width: '100%',
     height: '100%',
+  },
+  logoText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  logoTextMc: {
+    color: '#FFBC0D', // McDonald's yellow
+  },
+  logoTextTogether: {
+    color: 'black',
   },
   gridContainer: {
     flexDirection: 'row',

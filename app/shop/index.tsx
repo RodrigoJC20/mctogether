@@ -1,6 +1,4 @@
 import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Image, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useState } from 'react';
 import { BoxOpening } from '../../components/BoxOpening';
 
@@ -12,8 +10,6 @@ const ITEMS = {
 };
 
 export default function Shop() {
-  const router = useRouter();
-  const [currency] = useState(1234); // This will be connected to your state management later
   const [showBoxOpening, setShowBoxOpening] = useState(false);
   const [selectedBoxType, setSelectedBoxType] = useState<'common' | 'rare' | 'exclusive' | null>(null);
 
@@ -27,23 +23,6 @@ export default function Shop() {
       source={require('../../assets/images/shop-bg.jpg')} 
       style={styles.container}
     >
-      {/* Back Button */}
-      <TouchableOpacity 
-        style={styles.backButton}
-        onPress={() => router.back()}
-      >
-        <Ionicons name="arrow-back" size={24} color="white" />
-      </TouchableOpacity>
-
-      {/* Currency Display */}
-      <View style={styles.currencyContainer}>
-        <Image 
-          source={require('../../assets/images/coin.png')} 
-          style={styles.coinIcon}
-        />
-        <Text style={styles.currencyText}>{currency}</Text>
-      </View>
-
       {/* Shop Sign */}
       <Image 
         source={require('../../assets/images/shop-sign.jpg')}
@@ -113,42 +92,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
-  backButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    backgroundColor: '#00000088',
-    borderRadius: 20,
-    padding: 10,
-    zIndex: 10
-  },
-  currencyContainer: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#00000088',
-    borderRadius: 20,
-    padding: 10,
-    zIndex: 10
-  },
-  coinIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 5
-  },
-  currencyText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold'
-  },
   shopSign: {
     width: '100%',
     height: 120,
     resizeMode: 'contain',
     alignSelf: 'center',
-    marginTop: 80,
+    marginTop: 20,
     marginBottom: 20
   },
   boxesContainer: {

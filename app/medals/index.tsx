@@ -87,14 +87,10 @@ export default function Medals() {
   
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.backButton}
-        onPress={() => router.back()}
-      >
-        <Ionicons name="arrow-back" size={24} color="white" />
-      </TouchableOpacity>
-      
-      <Text style={styles.title}>Your Medals</Text>
+      <Text style={styles.logoText}>
+        <Text style={styles.logoTextMc}>Mc</Text>
+        <Text style={styles.logoTextTogether}>Medals</Text>
+      </Text>
       
       <ScrollView contentContainerStyle={styles.medalsGrid}>
         {medals.map(renderMedal)}
@@ -151,7 +147,7 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
+    
     marginBottom: 20,
   },
   backButton: {
@@ -193,6 +189,17 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     resizeMode: 'contain',
+  },
+  logoText: {
+    fontSize: 22,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  logoTextMc: {
+    color: '#FFBC0D', // McDonald's yellow
+  },
+  logoTextTogether: {
+    color: 'black',
   },
   lockedMedal: {
     opacity: 0.5,
