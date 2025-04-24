@@ -16,6 +16,7 @@ interface PartyState {
   loading: boolean;
   error: string | null;
   mode: PartyMode;
+  isJoining: boolean;
 }
 
 interface PartyContextType extends PartyState {
@@ -34,6 +35,7 @@ const initialState: PartyState = {
   loading: false,
   error: null,
   mode: 'menu',
+  isJoining: false,
 };
 
 const PartyContext = createContext<PartyContextType | null>(null);
@@ -87,7 +89,7 @@ export function PartyProvider({ children }: ProviderProps): JSX.Element {
 
   const joinParty = useCallback(async (groupId: string, userId: string) => {
     try {
-      setState(prev => ({ ...prev, loading: true, error: null }));
+      setState(prev => ({ ...prev, loading: true, error: null, isJoining: true }));
       const response = await groupApi.joinGroup(groupId, userId);
       const memberDetails = await Promise.all(
         response.members.map(async (id: string) => {
@@ -104,9 +106,10 @@ export function PartyProvider({ children }: ProviderProps): JSX.Element {
         groupId,
         members: memberDetails,
         mode: 'qr',
+        isJoining: false
       }));
     } catch (err) {
-      setState(prev => ({ ...prev, error: 'Failed to join party' }));
+      setState(prev => ({ ...prev, error: 'Failed to join party', isJoining: false }));
       throw err;
     } finally {
       setState(prev => ({ ...prev, loading: false }));

@@ -27,16 +27,17 @@ export const PartyModal: React.FC<PartyModalProps> = ({
     joinParty,
     leaveParty,
     fetchPartyMembers,
+    isJoining,
   } = usePartyState();
 
   // Mock streak numbers for demonstration
   const mockStreakNumbers = [7, 3, 12, 5, 8, 15, 4, 9];
 
   useEffect(() => {
-    if (visible && mode === 'qr' && groupId) {
+    if (visible && mode === 'qr' && groupId && !isJoining) {
       fetchPartyMembers(groupId);
     }
-  }, [visible, mode, groupId, fetchPartyMembers]);
+  }, [visible, mode, groupId, fetchPartyMembers, isJoining]);
 
   useEffect(() => {
     if (isConnected) {
