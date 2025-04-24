@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Image, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useState } from 'react';
@@ -50,47 +50,49 @@ export default function Shop() {
         style={styles.shopSign}
       />
 
-      {/* Happy Meal Boxes */}
-      <View style={styles.boxesContainer}>
-        {/* Common Box */}
-        <TouchableOpacity 
-          style={styles.boxContainer}
-          onPress={() => handleBoxPress('common')}
-        >
-          <Image 
-            source={require('../../assets/images/box.png')}
-            style={styles.boxImage}
-          />
-          <Text style={styles.boxTitle}>Common Box</Text>
-          <Text style={styles.boxPrice}>100 coins</Text>
-        </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.boxesContainer}>
+        {/* Happy Meal Boxes */}
+        <View style={styles.boxesContainer}>
+          {/* Common Box */}
+          <TouchableOpacity 
+            style={styles.boxContainer}
+            onPress={() => handleBoxPress('common')}
+          >
+            <Image 
+              source={require('../../assets/images/box.png')}
+              style={styles.boxImage}
+            />
+            <Text style={styles.boxTitle}>Common Box</Text>
+            <Text style={styles.boxPrice}>100 coins</Text>
+          </TouchableOpacity>
 
-        {/* Rare Box */}
-        <TouchableOpacity 
-          style={styles.boxContainer}
-          onPress={() => handleBoxPress('rare')}
-        >
-          <Image 
-            source={require('../../assets/images/box.png')}
-            style={styles.boxImage}
-          />
-          <Text style={styles.boxTitle}>Rare Box</Text>
-          <Text style={styles.boxPrice}>500 coins</Text>
-        </TouchableOpacity>
+          {/* Rare Box */}
+          <TouchableOpacity 
+            style={styles.boxContainer}
+            onPress={() => handleBoxPress('rare')}
+          >
+            <Image 
+              source={require('../../assets/images/box.png')}
+              style={styles.boxImage}
+            />
+            <Text style={styles.boxTitle}>Rare Box</Text>
+            <Text style={styles.boxPrice}>500 coins</Text>
+          </TouchableOpacity>
 
-        {/* Exclusive Box */}
-        <TouchableOpacity 
-          style={styles.boxContainer}
-          onPress={() => handleBoxPress('exclusive')}
-        >
-          <Image 
-            source={require('../../assets/images/box.png')}
-            style={styles.boxImage}
-          />
-          <Text style={styles.boxTitle}>Exclusive Box</Text>
-          <Text style={styles.boxPrice}>1000 coins</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Exclusive Box */}
+          <TouchableOpacity 
+            style={styles.boxContainer}
+            onPress={() => handleBoxPress('exclusive')}
+          >
+            <Image 
+              source={require('../../assets/images/box.png')}
+              style={styles.boxImage}
+            />
+            <Text style={styles.boxTitle}>Exclusive Box</Text>
+            <Text style={styles.boxPrice}>1000 coins</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
       {/* Box Opening Animation */}
       {showBoxOpening && selectedBoxType && (
@@ -109,6 +111,7 @@ export default function Shop() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   backButton: {
     position: 'absolute',
@@ -141,41 +144,53 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
   shopSign: {
-    width: '80%',
-    height: 100,
+    width: '100%',
+    height: 120,
     resizeMode: 'contain',
     alignSelf: 'center',
-    marginTop: 100
+    marginTop: 80,
+    marginBottom: 20
   },
   boxesContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    flexGrow: 1,
     alignItems: 'center',
-    gap: 20,
-    paddingHorizontal: 20
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+    paddingTop: 20
   },
   boxContainer: {
     alignItems: 'center',
-    backgroundColor: '#FEF8EB',
-    borderRadius: 15,
-    padding: 15,
-    width: '100%',
-    maxWidth: 300
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5
   },
   boxImage: {
-    width: 150,
-    height: 150,
+    width: 180,
+    height: 180,
     resizeMode: 'contain'
   },
   boxTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FD5D51',
-    marginTop: 10
+    marginTop: 15,
+    textAlign: 'center'
   },
   boxPrice: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#ADBD50',
-    marginTop: 5
+    marginTop: 8,
+    fontWeight: '600'
   }
 });
