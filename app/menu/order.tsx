@@ -3,8 +3,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import CryptoJS from 'crypto-js';
 import { useLocalSearchParams } from 'expo-router';
 import menuData from '../../assets/data/menu.json';
+import axios from 'axios';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CartItem {
   id: string;
@@ -110,14 +113,71 @@ export default function Order() {
           <TouchableOpacity
             style={styles.payButton}
             onPress={async () => {
-              setIsLoading(true);
-              setIsCheckoutModalVisible(false);
+              console.log('Pay button pressed');
+              //setIsLoading(true);
 
-              // Simulate payment processing
-              setTimeout(() => {
-                setIsLoading(false);
-                console.log('Payment processed successfully!');
-              }, 3000);
+              const orderId = `order-${Date.now()}${cartItems.map(item => item.id).join('')}${Math.floor(Math.random() * 1000000000)}`;
+              console.log('Debug 1');
+              const orderIdHash = CryptoJS.SHA256(orderId).toString(CryptoJS.enc.Hex);
+              console.log('Debug 2');
+              //const { user } = useAuth(); // FIXME useAuth() is hanging
+              console.log('Debug 3');
+              const orderResponse = await axios.post(`http://192.168.100.16:3000/payments/make-order`,
+                {
+                  partyId: orderId, // TODO get from the friends group
+                  orderId: orderIdHash,
+                  restaurantId: "restaurant-123", // TODO get from the friends group
+                  members: [{
+                    userEmail: "test1@example.com", //user?.email,
+                    items: cartItems.map(item => ({
+                      menuItemId: item.id,
+                      quantity: item.quantity,
+                    })),
+                  }]
+                }
+              )
+
+              if (orderResponse.status !== 201) {
+                console.error('Order returned non success status:', orderResponse.data);
+              } else if (!orderResponse.data.success) {
+                console.error('Order sent non success response:', orderResponse.data.message);
+              } else {
+                console.log('Order successful:', orderResponse.data);
+              }
+
+              const paymentResponse = await axios.post(`http://192.168.100.16:3000/payments/pay`,
+                {
+                  userEmail: "test1@example.com", //user?.email,
+                  partyId: "party-123", // TODO get from the friends group
+                  orderId: orderIdHash,
+                  paymentAmount: calculateTotal(),
+                  paymentMethod: "CARD",
+                  cardToken: selectedCard,
+                  cardExpiry: "12/25", // FIXME
+                  cardVerificationToken: "123", // FIXME
+                  cardName: "McDonalds User", //user?.username,
+                },
+                {
+                  headers: {
+                    'Content-Type': 'application/json'
+                  }
+                }
+              );
+
+              if (paymentResponse.status !== 201) {
+                console.error('Payment returned non sucess status:', paymentResponse.data);
+              } else if (!paymentResponse.data.success) {
+                console.error('Payment sent non success response:', paymentResponse.data.message);
+              } else {
+                console.log('Payment successful:', paymentResponse.data);
+                // Clear cart after successful payment
+                clearCart();
+                // Show success message
+                alert('Payment successful! Your order has been placed.');
+                router.navigate('/');
+              }
+
+              setIsCheckoutModalVisible(false);
             }}
           >
             <Text style={styles.payButtonText}>Pay</Text>
