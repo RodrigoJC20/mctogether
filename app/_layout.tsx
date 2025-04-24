@@ -4,6 +4,7 @@ import { View, Text } from 'react-native';
 import { AuthProvider, useAuth } from '../hooks/useAuth';
 import { useEffect } from 'react';
 import React from 'react';
+import { WebSocketProvider } from '@/context/websocketContext';
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -39,10 +40,12 @@ export default function Layout() {
   return (
     <AuthProvider>
       <AuthGuard>
-        <View style={{ flex: 1 }}>
-          <Slot />
-          <StatusBar style="light" />
-        </View>
+        <WebSocketProvider>
+          <View style={{ flex: 1 }}>
+            <Slot />
+            <StatusBar style="light" />
+          </View>
+        </WebSocketProvider>
       </AuthGuard>
     </AuthProvider>
   );

@@ -5,6 +5,7 @@ import { QRCodeComponent } from './QRCode';
 import { useGroup } from '../hooks/useGroup';
 import { useAuth } from '../hooks/useAuth';
 import { groupApi } from '../api/client';
+import { useWebSocket } from '@/context/websocketContext';
 
 interface PartyModalProps {
   visible: boolean;
@@ -34,6 +35,7 @@ export const PartyModal: React.FC<PartyModalProps> = ({
   const { user } = useAuth();
   const { leaveCurrentGroup, loading: leaveLoading, fetchGroupMembers } = useGroup(user?._id || '');
   const [currentUser, setCurrentUser] = useState(user);
+  const { connect, disconnect, isConnected, sendMessage } = useWebSocket();
 
   // Fetch fresh user info when modal opens
   useEffect(() => {
@@ -56,15 +58,23 @@ export const PartyModal: React.FC<PartyModalProps> = ({
     refreshUserInfo();
   }, [visible, user?._id, fetchGroupMembers]);
 
+  useEffect(() => {
+    if (isConnected) {
+      console.log("Connection established, sending test message");
+      sendMessage("Hello from Party App!"); 
+    }
+  }, [isConnected, sendMessage]);
+
   const handleCreateParty = async () => {
     try {
-      await onCreateParty();
-      // Update local state immediately after successful party creation
-      if (user?._id) {
-        const freshUserInfo = await groupApi.getUser(user._id);
-        setCurrentUser(freshUserInfo);
-        await fetchGroupMembers();
-      }
+      // await onCreateParty();
+      // // Update local state immediately after successful party creation
+      // if (user?._id) {
+      //   const freshUserInfo = await groupApi.getUser(user._id);
+      //   setCurrentUser(freshUserInfo);
+      //   await fetchGroupMembers();
+      // }
+      connect();
     } catch (err) {
       console.error('Error creating party:', err);
     }
@@ -75,6 +85,7 @@ export const PartyModal: React.FC<PartyModalProps> = ({
       await leaveCurrentGroup(user._id);
       setCurrentUser(null);
       onClose();
+      disconnect();
     }
   };
 
@@ -89,12 +100,12 @@ export const PartyModal: React.FC<PartyModalProps> = ({
             <Text style={styles.closeCrossText}>×</Text>
           </TouchableOpacity>
 
-          {currentUser?.groupId ? (
+          {isConnected ? (
             <>
               <Text style={styles.modalText}>Your Party</Text>
-              {showQR && currentUser.groupId && (
+              {showQR && currentUser?.groupId && (
                 <QRCodeComponent 
-                  groupId={currentUser.groupId} 
+                  groupId={currentUser?.groupId} 
                   mode="display"
                 />
               )}
