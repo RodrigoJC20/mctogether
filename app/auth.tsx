@@ -31,7 +31,7 @@ export default function AuthScreen() {
       
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder="Email/Username"
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
