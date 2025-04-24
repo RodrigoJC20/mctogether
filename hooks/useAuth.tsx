@@ -21,6 +21,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +30,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const refreshUser = async () => {
+    try {
+      if (!token) return;
+      
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+      } else {
+        // Token might be invalid, clear it
+        await AsyncStorage.removeItem('jwt');
+        setToken(null);
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     // Check for existing token on mount
@@ -82,6 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       await AsyncStorage.setItem('jwt', data.token);
+      // Clear the cart when user logs in
+      await AsyncStorage.setItem('cart', JSON.stringify([]));
       setToken(data.token);
       setUser(data.user);
       router.replace('/');
@@ -127,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const value = { user, token, isLoading, login, register, logout };
+  const value = { user, token, isLoading, login, register, logout, refreshUser };
 
   return (
     <AuthContext.Provider value={value}>

@@ -4,8 +4,7 @@ import { useRouter } from 'expo-router';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import PetsArea from '../components/PetsArea';
 import { useUIState } from '../hooks/useUIState';
-import { useQRCode } from '../hooks/useQRCode';
-import { usePets } from '../hooks/usePets';
+import { usePartyState } from '../hooks/usePartyState';
 import { useAuth } from '../hooks/useAuth';
 import { PartyModal } from '../components/PartyModal';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,49 +13,42 @@ export default function Home() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { modalVisible, setModalVisible } = useUIState();
-  const { showQR, setShowQR, mode, setMode, loading, error, groupId, members, handleCreateParty, handleJoinParty, handleQRScanned, fetchGroupMembers } = useQRCode();
-  const { myPet, friendPets, showDebugPerimeter, toggleDebugPerimeter } = usePets(
-    groupId || null, 
-    user?._id || null, 
-    members.map(memberId => ({ userId: memberId, role: 'member' })) || []
-  );
+  const { 
+    mode, 
+    groupId, 
+    members,
+  } = usePartyState();
 
-  // Close modal when joining a group
+  // Close modal only when completing a join (transitioning from scan to qr)
   useEffect(() => {
-    if (groupId && modalVisible && mode === 'scan') {
+    const isJoining = mode === 'qr' && groupId && modalVisible;
+    const wasScanning = mode === 'scan';
+    if (isJoining && wasScanning) {
       setModalVisible(false);
     }
   }, [groupId, modalVisible, mode]);
-
-  const handleQRScannedWrapper = async (data: string): Promise<boolean> => {
-    try {
-      await handleQRScanned(data);
-      return true;
-    } catch (error) {
-      console.error('Error handling QR scan:', error);
-      return false;
-    }
-  };
 
   const handleLogout = async () => {
     await logout();
   };
 
-  const handlePartyButton = async () => {
+  const handlePartyButton = () => {
     setModalVisible(true);
-    // If we're in a group, show the QR code and fetch latest members
-    if (groupId) {
-      await fetchGroupMembers(groupId);
-      setShowQR(true);
-    }
   };
   
   return (
     <ImageBackground source={require('../assets/images/bg.jpeg')} style={styles.background}>
       <PetsArea 
-        myPet={myPet} 
-        friendPets={friendPets} 
-        showDebugPerimeter={showDebugPerimeter} 
+        myPet={user?._id ? {
+          id: `pet-${user._id}`,
+          image: require('../assets/images/pet.png')
+        } : null} 
+        friendPets={members
+          .filter(member => member.userId !== user?._id)
+          .map(member => ({
+            id: `pet-${member.userId}`,
+            image: require('../assets/images/pet.png')
+          }))} 
       />
       
       <View style={styles.uiLayer}>
@@ -96,7 +88,7 @@ export default function Home() {
 
         {/* Party Button - Shows QR code when in a party */}
         <TouchableOpacity style={styles.partyButton} onPress={handlePartyButton}>
-          {user?.groupId ? (
+          {groupId ? (
             <View style={styles.partyButtonContent}>
               <Ionicons name="qr-code" size={24} color="white" />
               <Text style={styles.partyText}>Party</Text>
@@ -105,34 +97,11 @@ export default function Home() {
             <Text style={styles.partyText}>Party</Text>
           )}
         </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.debugButton}
-          onPress={toggleDebugPerimeter}
-        >
-          <Text style={styles.debugButtonText}>
-            {showDebugPerimeter ? "Hide Debug" : "Show Debug"}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       <PartyModal
         visible={modalVisible}
-        onClose={() => {
-          setModalVisible(false);
-          setShowQR(false);
-          setMode('display');
-        }}
-        groupId={groupId}
-        members={members}
-        showQR={showQR}
-        onCreateParty={handleCreateParty}
-        onJoinParty={() => {
-          setMode('scan');
-        }}
-        onQRScanned={handleQRScannedWrapper}
-        loading={loading}
-        mode={mode}
+        onClose={() => setModalVisible(false)}
       />
     </ImageBackground>
   );
@@ -211,7 +180,7 @@ const styles = StyleSheet.create({
   couponsButton: {
     position: 'absolute',
     bottom: 40,
-    left: 80, // Position it to the right of the medals button
+    left: 80,
     backgroundColor: '#00000088',
     borderRadius: 20,
     padding: 10,
@@ -241,20 +210,6 @@ const styles = StyleSheet.create({
   partyText: {
     color: 'white',
     fontSize: 18,
-    fontWeight: 'bold',
-  },
-  debugButton: {
-    position: 'absolute',
-    top: 100,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(0, 120, 255, 0.7)',
-    borderRadius: 15,
-    paddingVertical: 6,
-    paddingHorizontal: 15,
-  },
-  debugButtonText: {
-    color: 'white',
-    fontSize: 12,
     fontWeight: 'bold',
   },
   menuButton: {
