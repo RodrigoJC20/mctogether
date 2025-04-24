@@ -76,28 +76,35 @@ export default function Home() {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.bottomLeftButton} onPress={() => router.push('/medals')}>
-          <FontAwesome5 name="trophy" size={24} color="white" />
-        </TouchableOpacity>
+        <View style={styles.bottomBar}>
+          <View style={styles.bottomBarContent}>
+            <TouchableOpacity style={styles.bottomIconButton} onPress={() => router.push('/medals')}>
+              <FontAwesome5 name="trophy" size={24} color="white" />
+            </TouchableOpacity>
 
-        <TouchableOpacity style={styles.couponsButton} onPress={() => router.push('/coupons')}>
-          <FontAwesome5 name="ticket-alt" size={24} color="white" />
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.bottomIconButton} onPress={() => router.push('/coupons')}>
+              <FontAwesome5 name="ticket-alt" size={24} color="white" />
+            </TouchableOpacity>
 
-        <TouchableOpacity style={styles.bottomRightButton} onPress={() => router.push('/items')}>
-          <MaterialIcons name="pets" size={28} color="white" />
-        </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.partyButton, groupId && styles.partyButtonActive]} 
+              onPress={handlePartyButton}
+            >
+              <View style={styles.partyButtonContent}>
+                {groupId && <Ionicons name="qr-code" size={24} color="white" style={styles.partyIcon} />}
+                <Text style={styles.partyText}>Party</Text>
+              </View>
+            </TouchableOpacity>
 
-        <TouchableOpacity style={styles.partyButton} onPress={handlePartyButton}>
-          {groupId ? (
-            <View style={styles.partyButtonContent}>
-              <Ionicons name="qr-code" size={24} color="white" />
-              <Text style={styles.partyText}>Party</Text>
-            </View>
-          ) : (
-            <Text style={styles.partyText}>Party</Text>
-          )}
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.bottomIconButton} onPress={() => router.push('/items')}>
+              <FontAwesome5 name="box" size={24} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.bottomIconButton} onPress={() => router.push('/items')}>
+              <MaterialIcons name="pets" size={28} color="white" />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
       <PartyModal
@@ -181,43 +188,58 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  bottomLeftButton: {
+  bottomBar: {
     position: 'absolute',
-    bottom: 40,
-    left: 20,
-    backgroundColor: '#00000088',
-    borderRadius: 20,
-    padding: 10,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: 30,
+    paddingHorizontal: 16,
   },
-  couponsButton: {
-    position: 'absolute',
-    bottom: 40,
-    left: 80,
-    backgroundColor: '#00000088',
-    borderRadius: 20,
-    padding: 10,
+  bottomBarContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 20,
   },
-  bottomRightButton: {
-    position: 'absolute',
-    bottom: 40,
-    right: 20,
+  bottomIconButton: {
     backgroundColor: '#00000088',
     borderRadius: 20,
-    padding: 10,
+    padding: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 48,
+    height: 48,
   },
   partyButton: {
-    position: 'absolute',
-    bottom: 30,
-    alignSelf: 'center',
     backgroundColor: 'skyblue',
-    borderRadius: 30,
+    borderRadius: 25,
     paddingVertical: 12,
-    paddingHorizontal: 30,
+    paddingHorizontal: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  partyButtonActive: {
+    backgroundColor: '#4CAF50',
   },
   partyButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
+  },
+  partyIcon: {
+    marginRight: 4,
   },
   partyText: {
     color: 'white',
