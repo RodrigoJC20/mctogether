@@ -52,41 +52,42 @@ export default function Home() {
       />
       
       <View style={styles.uiLayer}>
-        <View style={styles.topRight}>
-          <Text style={styles.usernameText}>{user?.username}</Text>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
+        <View style={styles.topBar}>
+          <View style={styles.topBarLeft}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/shop')}>
+              <FontAwesome5 name="shopping-bag" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/menu')}>
+              <MaterialIcons name="restaurant-menu" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.topBarRight}>
+            <View style={styles.currencyContainer}>
+              <FontAwesome5 name="coins" size={20} color="white" />
+              <Text style={styles.currencyText}>{user?.currency || 0}</Text>
+            </View>
+            <View style={styles.userContainer}>
+              <Text style={styles.usernameText}>{user?.username}</Text>
+              <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+                <Text style={styles.logoutText}>Logout</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-
-        <View style={styles.currencyContainer}>
-          <FontAwesome5 name="coins" size={20} color="white" />
-          <Text style={styles.currencyText}>{user?.currency || 0}</Text>
-        </View>
-
-        <TouchableOpacity style={styles.menuButton} onPress={() => router.push('/menu')}>
-          <MaterialIcons name="restaurant-menu" size={24} color="white" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.topLeftButton} onPress={() => router.push('/shop')}>
-          <FontAwesome5 name="shopping-bag" size={24} color="white" />
-        </TouchableOpacity>
 
         <TouchableOpacity style={styles.bottomLeftButton} onPress={() => router.push('/medals')}>
           <FontAwesome5 name="trophy" size={24} color="white" />
         </TouchableOpacity>
 
-        {/* Coupons Button */}
         <TouchableOpacity style={styles.couponsButton} onPress={() => router.push('/coupons')}>
           <FontAwesome5 name="ticket-alt" size={24} color="white" />
         </TouchableOpacity>
 
-        {/* Items Button */}
         <TouchableOpacity style={styles.bottomRightButton} onPress={() => router.push('/items')}>
           <MaterialIcons name="pets" size={28} color="white" />
         </TouchableOpacity>
 
-        {/* Party Button - Shows QR code when in a party */}
         <TouchableOpacity style={styles.partyButton} onPress={handlePartyButton}>
           {groupId ? (
             <View style={styles.partyButtonContent}>
@@ -119,55 +120,66 @@ const styles = StyleSheet.create({
     height: '100%',
     zIndex: 2,
   },
-  topLeftButton: {
-    position: 'absolute',
-    top: 120,
-    left: 20,
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 50,
+    paddingHorizontal: 16,
+    width: '100%',
+  },
+  topBarLeft: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  topBarRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  iconButton: {
     backgroundColor: '#00000088',
     borderRadius: 20,
-    padding: 10,
+    padding: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  topRight: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-    backgroundColor: '#00000088',
-    borderRadius: 20,
-    padding: 10,
-    marginBottom: 20,
-  },
-  usernameText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  logoutButton: {
-    backgroundColor: '#ff4444',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-  },
-  logoutText: {
-    color: 'white',
-    fontSize: 12,
-  },
-  currencyContainer: {
-    position: 'absolute',
-    top: 120,
-    right: 20,
+  userContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#00000088',
     borderRadius: 20,
     padding: 10,
-    marginTop: 20,
+    gap: 10,
+  },
+  currencyContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#00000088',
+    borderRadius: 20,
+    padding: 10,
+    gap: 6,
+  },
+  usernameText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   currencyText: {
     color: 'white',
-    marginLeft: 5,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  logoutButton: {
+    backgroundColor: '#ff4444',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  logoutText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
   },
   bottomLeftButton: {
     position: 'absolute',
@@ -211,13 +223,5 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  menuButton: {
-    position: 'absolute',
-    top: 120,
-    left: 80,
-    backgroundColor: '#00000088',
-    borderRadius: 20,
-    padding: 10,
   },
 });
