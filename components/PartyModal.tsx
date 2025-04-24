@@ -27,13 +27,17 @@ export const PartyModal: React.FC<PartyModalProps> = ({
     joinParty,
     leaveParty,
     fetchPartyMembers,
+    isJoining,
   } = usePartyState();
 
+  // Mock streak numbers for demonstration
+  const mockStreakNumbers = [7, 3, 12, 5, 8, 15, 4, 9];
+
   useEffect(() => {
-    if (visible && mode === 'qr' && groupId) {
+    if (visible && mode === 'qr' && groupId && !isJoining) {
       fetchPartyMembers(groupId);
     }
-  }, [visible, mode, groupId, fetchPartyMembers]);
+  }, [visible, mode, groupId, fetchPartyMembers, isJoining]);
 
   useEffect(() => {
     if (isConnected) {
@@ -111,11 +115,21 @@ export const PartyModal: React.FC<PartyModalProps> = ({
               <View style={styles.memberListContainer}>
                 <Text style={styles.memberListTitle}>Party Members</Text>
                 <ScrollView style={styles.memberList}>
-                  {members.map((member) => (
+                  {members.map((member, index) => (
                     <View key={member.userId} style={styles.memberItem}>
-                      <Text style={styles.memberText}>
-                        {member.username}
-                      </Text>
+                      <View style={styles.memberInfoContainer}>
+                        <Text style={styles.memberText}>
+                          {member.username}
+                        </Text>
+                        {member.userId !== user?._id && (
+                          <View style={styles.streakContainer}>
+                            <Ionicons name="flame" size={16} color="#FF6B6B" />
+                            <Text style={styles.streakText}>
+                              {mockStreakNumbers[index % mockStreakNumbers.length]}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
                     </View>
                   ))}
                 </ScrollView>
@@ -310,9 +324,30 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  memberInfoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
   memberText: {
     fontSize: 16,
     color: '#333',
+    fontWeight: '500',
+  },
+  streakContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  streakText: {
+    fontSize: 14,
+    color: '#FF6B6B',
+    fontWeight: '600',
+    marginLeft: 4,
   },
   cancelButton: {
     backgroundColor: '#ff4444',

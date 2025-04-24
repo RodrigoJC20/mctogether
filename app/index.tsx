@@ -26,18 +26,26 @@ export default function Home() {
   return (
     <View style={styles.container}>
       <ImageBackground source={require('../assets/images/bg2.png')} style={styles.background}>
-        <PetsArea
-          myPet={user?._id ? {
-            id: `pet-${user._id}`,
-            image: require('../assets/images/pet.png')
-          } : null}
-          friendPets={members
-            .filter(member => member.userId !== user?._id)
-            .map(member => ({
-              id: `pet-${member.userId}`,
-              image: require('../assets/images/pet.png')
-            }))}
-        />
+      <PetsArea
+        myPet={user?._id ? {
+          id: `pet-${user._id}`,
+          name: 'me',
+          type: 0,
+          hat: 2,
+          eyes: 0,
+          mouth: 0,
+        } : null}
+        friendPets={members
+          .filter(member => member.userId !== user?._id)
+          .map(member => ({
+            id: `pet-${member.userId}`,
+            name: 'other',
+            type: 1,
+            hat: 1,
+            eyes: 1,
+            mouth: 1,
+          }))}
+      />
       </ImageBackground>
     </View>
   );
