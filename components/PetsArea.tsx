@@ -17,7 +17,11 @@ const BOUNDARIES = {
 // Type definitions
 interface PetData {
   id: string;
-  image: any;
+  name: string;
+  type: number;
+  hat: number;
+  eyes: number;
+  mouth: number;
 }
 
 interface PetsAreaProps {
@@ -33,7 +37,11 @@ const PetsArea: React.FC<PetsAreaProps> = ({ myPet, friendPets }) => {
         <Pet
           key={myPet.id}
           id={myPet.id}
-          image={myPet.image}
+          name={myPet.name}
+          type={myPet.type}
+          hat={myPet.hat}
+          eyes={myPet.eyes}
+          mouth={myPet.mouth}
           isMyPet={true}
         />
       )}
@@ -41,9 +49,13 @@ const PetsArea: React.FC<PetsAreaProps> = ({ myPet, friendPets }) => {
       {/* Render friend pets */}
       {friendPets.map((pet) => (
         <Pet
-            key={pet.id}
+          key={pet.id}
           id={pet.id}
-          image={pet.image}
+          name={pet.name}
+          type={pet.type}
+          hat={pet.hat}
+          eyes={pet.eyes}
+          mouth={pet.mouth}
           isMyPet={false}
         />
       ))}
