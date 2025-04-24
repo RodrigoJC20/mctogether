@@ -51,7 +51,7 @@ export const BoxOpening: React.FC<BoxOpeningProps> = ({ boxType, onClose }) => {
         setItemRarity(selectedRarity);
         setSelectedItem(randomItem);
         setShowResult(true);
-      }, 500);
+      }, 1500); // Increased delay to 1.5 seconds
     });
   };
 

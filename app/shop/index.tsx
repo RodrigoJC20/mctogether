@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { BoxOpening } from '../../components/BoxOpening';
+import { RotatingBackground } from '../../components/RotatingBackground';
 
 // Temporary items for testing
 const ITEMS = {
@@ -42,6 +43,7 @@ export default function Shop() {
             style={styles.boxContainer}
             onPress={() => handleBoxPress('common')}
           >
+            <RotatingBackground color="#3A7D44" />
             <Image 
               source={require('../../assets/images/box.png')}
               style={styles.boxImage}
@@ -61,6 +63,7 @@ export default function Shop() {
             style={styles.boxContainer}
             onPress={() => handleBoxPress('rare')}
           >
+            <RotatingBackground color="#DB0007" />
             <Image 
               source={require('../../assets/images/box.png')}
               style={styles.boxImage}
@@ -80,6 +83,7 @@ export default function Shop() {
             style={styles.boxContainer}
             onPress={() => handleBoxPress('exclusive')}
           >
+            <RotatingBackground color="#FFBC0D" />
             <Image 
               source={require('../../assets/images/box.png')}
               style={styles.boxImage}
@@ -143,22 +147,11 @@ const styles = StyleSheet.create({
   },
   boxesRow: {
     flexDirection: 'row',
-    gap: 20
+    gap: 40
   },
   boxContainer: {
     alignItems: 'center',
-    //backgroundColor: 'white',
-    //borderRadius: 20,
-    //padding: 20,
-    //width: 280,
-    //shadowColor: '#000',
-    //shadowOffset: {
-    //  width: 0,
-    //  height: 2,
-    //},
-    //shadowOpacity: 0.25,
-    //shadowRadius: 3.84,
-    //elevation: 5
+    width: 320,
   },
   boxImage: {
     width: 180,
@@ -168,11 +161,11 @@ const styles = StyleSheet.create({
   boxTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginTop: 15,
+    marginTop: 50,
     textAlign: 'center'
   },
   commonBoxTitle: {
-    color: '#264F36'
+    color: '#3A7D44'
   },
   rareBoxTitle: {
     color: '#DB0007'
