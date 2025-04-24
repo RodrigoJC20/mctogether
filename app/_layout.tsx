@@ -1,52 +1,32 @@
-import { Slot, useRouter, useSegments } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { View, Text } from 'react-native';
+import { Stack, Slot } from 'expo-router';
 import { AuthProvider, useAuth } from '../hooks/useAuth';
-import { useEffect } from 'react';
-import React from 'react';
+import { PartyProvider } from '../hooks/usePartyState';
 import { WebSocketProvider } from '@/context/websocketContext';
+import React from 'react';
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    if (isLoading) return;
-
-    const inAuthGroup = segments[0] === ('auth' as string);
-
-    if (!user && !inAuthGroup) {
-      // Redirect to the auth page if not authenticated
-      router.replace('/auth' as any);
-    } else if (user && inAuthGroup) {
-      // Redirect to the home page if authenticated
-      router.replace('/');
-    }
-  }, [user, isLoading, segments]);
-
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Loading...</Text>
-      </View>
-    );
+  if (!user) {
+    return <Slot />;
   }
-
   return <>{children}</>;
 }
 
 export default function Layout() {
   return (
     <AuthProvider>
-      <AuthGuard>
-        <WebSocketProvider>
-          <View style={{ flex: 1 }}>
-            <Slot />
-            <StatusBar style="light" />
-          </View>
-        </WebSocketProvider>
-      </AuthGuard>
+      <PartyProvider>
+        <AuthGuard>
+          <WebSocketProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+              }}
+            />
+          </WebSocketProvider>
+        </AuthGuard>
+      </PartyProvider>
     </AuthProvider>
   );
 }
