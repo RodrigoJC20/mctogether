@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, TouchableOpacity, Text, Modal, Image, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { QRCodeComponent } from './QRCode';
@@ -24,7 +24,15 @@ export const PartyModal: React.FC<PartyModalProps> = ({
     createParty,
     joinParty,
     leaveParty,
+    fetchPartyMembers,
   } = usePartyState();
+
+  // Fetch party members when modal is visible and in QR mode
+  useEffect(() => {
+    if (visible && mode === 'qr' && groupId) {
+      fetchPartyMembers(groupId);
+    }
+  }, [visible, mode, groupId, fetchPartyMembers]);
 
   const handleCreateParty = async () => {
     if (!user?._id) return;
@@ -90,13 +98,19 @@ export const PartyModal: React.FC<PartyModalProps> = ({
                   mode="display"
                 />
               )}
-              <ScrollView style={styles.memberList}>
-                {members.map((member) => (
-                  <View key={member.userId} style={styles.memberItem}>
-                    <Text style={styles.memberText}>{member.userId}</Text>
-                  </View>
-                ))}
-              </ScrollView>
+              <View style={styles.memberListContainer}>
+                <Text style={styles.memberListTitle}>Party Members</Text>
+                <ScrollView style={styles.memberList}>
+                  {members.map((member) => (
+                    <View key={member.userId} style={styles.memberItem}>
+                      <Text style={styles.memberText}>
+                        {member.username}
+                        {member.role === 'leader' && ' (Leader)'}
+                      </Text>
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
               <TouchableOpacity 
                 style={[styles.modalButton, styles.leaveButton]} 
                 onPress={handleLeaveParty}
@@ -257,10 +271,30 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginVertical: 20,
   },
-  memberList: {
-    maxHeight: 200,
+  memberListContainer: {
     width: '100%',
     marginVertical: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  memberListTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  memberList: {
+    maxHeight: 150,
   },
   memberItem: {
     padding: 10,
@@ -269,7 +303,7 @@ const styles = StyleSheet.create({
   },
   memberText: {
     fontSize: 16,
-    color: 'black',
+    color: '#333',
   },
   cancelButton: {
     backgroundColor: '#ff4444',
