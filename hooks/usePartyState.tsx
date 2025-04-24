@@ -4,6 +4,7 @@ import { groupApi } from '../api/client';
 
 interface PartyMember {
   userId: string;
+  username: string;
   role: 'leader' | 'member';
 }
 
@@ -60,13 +61,20 @@ export function PartyProvider({ children }: ProviderProps): JSX.Element {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       const response = await groupApi.createGroup(userId, name || 'New Party');
+      const memberDetails = await Promise.all(
+        response.members.map(async (id: string) => {
+          const userDetails = await groupApi.getUser(id);
+          return {
+            userId: id,
+            username: userDetails.username,
+            role: id === userId ? 'leader' : 'member'
+          };
+        })
+      );
       setState(prev => ({ 
         ...prev,
         groupId: response._id,
-        members: response.members.map((id: string) => ({ 
-          userId: id, 
-          role: id === userId ? 'leader' : 'member' 
-        })),
+        members: memberDetails,
         mode: 'qr',
       }));
     } catch (err) {
@@ -81,13 +89,20 @@ export function PartyProvider({ children }: ProviderProps): JSX.Element {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       const response = await groupApi.joinGroup(groupId, userId);
+      const memberDetails = await Promise.all(
+        response.members.map(async (id: string) => {
+          const userDetails = await groupApi.getUser(id);
+          return {
+            userId: id,
+            username: userDetails.username,
+            role: 'member'
+          };
+        })
+      );
       setState(prev => ({ 
         ...prev,
         groupId,
-        members: response.members.map((id: string) => ({ 
-          userId: id, 
-          role: 'member' 
-        })),
+        members: memberDetails,
         mode: 'qr',
       }));
     } catch (err) {
@@ -124,12 +139,19 @@ export function PartyProvider({ children }: ProviderProps): JSX.Element {
       setState(prev => ({ ...prev, loading: true, error: null }));
       const group = await groupApi.getGroup(groupId);
       if (group?.members) {
+        const memberDetails = await Promise.all(
+          group.members.map(async (id: string) => {
+            const userDetails = await groupApi.getUser(id);
+            return {
+              userId: id,
+              username: userDetails.username,
+              role: 'member'
+            };
+          })
+        );
         setState(prev => ({ 
           ...prev,
-          members: group.members.map((id: string) => ({ 
-            userId: id, 
-            role: 'member' 
-          }))
+          members: memberDetails
         }));
       }
     } catch (err: any) {
