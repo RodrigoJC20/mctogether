@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -32,17 +32,18 @@ const mockCoupons: Coupon[] = [
 export default function Coupons() {
   const router = useRouter();
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
-  
+
   const renderCoupon = (coupon: Coupon) => (
-    <TouchableOpacity 
-      key={coupon.id} 
+    <TouchableOpacity
+      key={coupon.id}
       style={styles.couponContainer}
       onPress={() => setSelectedCoupon(coupon)}
     >
       <View style={styles.couponImageContainer}>
-        <Image 
-          source={require('../../assets/images/medals/null.png')}
-          style={styles.couponImage} 
+        <Ionicons
+          name="ticket-outline"
+          size={50}
+          style={styles.ticketIcon}
         />
       </View>
       <Text style={styles.couponName}>{coupon.name}</Text>
@@ -51,14 +52,14 @@ export default function Coupons() {
       </Text>
     </TouchableOpacity>
   );
-  
+
   return (
     <View style={styles.container}>
       <Text style={styles.logoText}>
         <Text style={styles.logoTextMc}>Mc</Text>
         <Text style={styles.logoTextTogether}>Coupons</Text>
       </Text>
-      
+
       <ScrollView contentContainerStyle={styles.couponsGrid}>
         {mockCoupons.map(renderCoupon)}
       </ScrollView>
@@ -74,9 +75,10 @@ export default function Coupons() {
             {selectedCoupon && (
               <>
                 <View style={styles.modalCouponImageContainer}>
-                  <Image 
-                    source={require('../../assets/images/medals/null.png')}
-                    style={styles.modalCouponImage} 
+                  <Ionicons
+                    name="ticket-outline"
+                    size={100}
+                    style={styles.ticketIconModal}
                   />
                 </View>
                 <Text style={styles.modalCouponName}>{selectedCoupon.name}</Text>
@@ -85,7 +87,7 @@ export default function Coupons() {
                 <Text style={styles.modalValidUntilText}>
                   Valid until: {new Date(selectedCoupon.validUntil).toLocaleDateString()}
                 </Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.closeButton}
                   onPress={() => setSelectedCoupon(null)}
                 >
@@ -101,7 +103,7 @@ export default function Coupons() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
+  container: {
     flex: 1,
     backgroundColor: '#f7f7f7',
     paddingTop: 60,
@@ -112,15 +114,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    backgroundColor: '#00000088',
-    borderRadius: 20,
-    padding: 10,
-    zIndex: 10
   },
   couponsGrid: {
     flexDirection: 'row',
@@ -146,12 +139,14 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     marginBottom: 5,
-    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  couponImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
+  ticketIcon: {
+    color: '#C0C0C0', // silver color
+    textShadowColor: '#999',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   couponName: {
     color: 'black',
@@ -166,7 +161,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   logoTextMc: {
-    color: '#FFBC0D', // McDonald's yellow
+    color: '#FFBC0D',
   },
   logoTextTogether: {
     color: 'black',
@@ -194,12 +189,14 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     marginBottom: 15,
-    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  modalCouponImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
+  ticketIconModal: {
+    color: '#C0C0C0',
+    textShadowColor: '#888',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
   },
   modalCouponName: {
     color: 'white',
@@ -235,4 +232,4 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 8,
   },
-}); 
+});

@@ -7,7 +7,6 @@ import CryptoJS from 'crypto-js';
 import { useLocalSearchParams } from 'expo-router';
 import menuData from '../../assets/data/menu.json';
 import axios from 'axios';
-import { useAuth } from '@/hooks/useAuth';
 
 interface CartItem {
   id: string;
@@ -19,7 +18,7 @@ interface CartItem {
 
 // Get fallback image
 const FALLBACK_IMAGE = require('../../assets/images/menu/null.png');
-const PAYMENTS_API = 'http://192.168.100.16:3000';
+const PAYMENTS_API = 'http://192.168.100.13:3000';
 
 // Function to safely get image with fallback
 const getMenuImage = (imageName: string) => {

@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import medalsData from '../../assets/data/medals.json';
 import { useState } from 'react';
+import Svg, { Path, Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
 
 interface MedalRequirement {
   type: string;
@@ -19,6 +20,61 @@ interface Medal {
   requirements: MedalRequirement;
 }
 
+const MedalIcon = ({ size, earned = true }: { size: number; earned?: boolean }) => {
+  const gradientId = `goldGradient-${earned ? 'earned' : 'locked'}`;
+  const ribbonColor = earned ? "#d32f2f" : "#888";
+
+  return (
+    <Svg width={size} height={size} viewBox="0 0 100 130">
+      <Defs>
+        <LinearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
+          {earned ? (
+            [
+              <Stop key="0" offset="0%" stopColor="#FFD700" />,
+              <Stop key="1" offset="50%" stopColor="#FFCC33" />,
+              <Stop key="2" offset="100%" stopColor="#F1C232" />
+            ]
+          ) : (
+            [
+              <Stop key="0" offset="0%" stopColor="#aaa" />,
+              <Stop key="1" offset="100%" stopColor="#bbb" />
+            ]
+          )}
+        </LinearGradient>
+      </Defs>
+
+      {/* Ribbon */}
+      <Path
+        d="M40 0 L50 30 L60 0 Z"
+        fill={ribbonColor}
+      />
+      <Path
+        d="M50 30 L40 60 L60 60 Z"
+        fill={ribbonColor}
+      />
+
+      {/* Medal body */}
+      <Circle
+        cx="50"
+        cy="90"
+        r="30"
+        fill={`url(#${gradientId})`}
+        stroke={earned ? '#8B4513' : '#666'}
+        strokeWidth="4"
+      />
+
+      {/* Inner star or detail */}
+      {earned && (
+        <Path
+          d="M50 68 L54 82 L68 82 L56 90 L60 104 L50 96 L40 104 L44 90 L32 82 L46 82 Z"
+          fill="#8B4513"
+        />
+      )}
+    </Svg>
+  );
+};
+
+
 export default function Medals() {
   const router = useRouter();
   const medals: Medal[] = medalsData.medals;
@@ -31,11 +87,7 @@ export default function Medals() {
       onPress={() => setSelectedMedal(medal)}
     >
       <View style={[styles.medalImageContainer, !medal.earned && styles.lockedMedal]}>
-        <Image 
-          //source={getMedalImage(medal.image)} 
-          source={require('../../assets/images/medals/null.png')}
-          style={styles.medalImage} 
-        />
+      <MedalIcon size={80} earned={medal.earned} />
         {!medal.earned && (
           <View style={styles.lockOverlay}>
             <Ionicons name="lock-closed" size={24} color="white" />
@@ -47,26 +99,6 @@ export default function Medals() {
       </Text>
     </TouchableOpacity>
   );
-
-  const getMedalImage = (imageName: string) => {
-    /*
-    try {
-      // Map image names to actual image assets
-      const imageMap: { [key: string]: any } = {
-        'first-steps.png': require('../../assets/images/medals/first-steps.png'),
-        'social-butterfly.png': require('../../assets/images/medals/social-butterfly.png'),
-        'task-master.png': require('../../assets/images/medals/task-master.png'),
-        'group-leader.png': require('../../assets/images/medals/group-leader.png'),
-        'team-player.png': require('../../assets/images/medals/team-player.png'),
-        'early-bird.png': require('../../assets/images/medals/early-bird.png'),
-      };
-      return imageMap[imageName] || require('../../assets/images/medals/null.png');
-      */
-    //} catch (error) {
-      // If there's any error loading the image, return the placeholder
-      return require('../../assets/images/medals/null.png');
-    //}
-  };
 
   const formatRequirement = (requirement: MedalRequirement): string => {
     switch (requirement.type) {
@@ -107,10 +139,7 @@ export default function Medals() {
             {selectedMedal && (
               <>
                 <View style={styles.modalMedalImageContainer}>
-                  <Image 
-                    source={require('../../assets/images/medals/null.png')}
-                    style={styles.modalMedalImage} 
-                  />
+                <MedalIcon size={150} earned={selectedMedal.earned} />
                   {!selectedMedal.earned && (
                     <View style={styles.modalLockOverlay}>
                       <Ionicons name="lock-closed" size={32} color="white" />
@@ -147,7 +176,6 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 24,
     fontWeight: 'bold',
-    
     marginBottom: 20,
   },
   backButton: {
@@ -169,7 +197,7 @@ const styles = StyleSheet.create({
     width: '45%',
     margin: 10,
     alignItems: 'center',
-    backgroundColor: '#white',
+    backgroundColor: 'white',
     padding: 15,
     borderRadius: 5,
     overflow: 'hidden',
@@ -184,11 +212,8 @@ const styles = StyleSheet.create({
     height: 80,
     marginBottom: 5,
     position: 'relative',
-  },
-  medalImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   logoText: {
     fontSize: 22,
@@ -202,7 +227,7 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   lockedMedal: {
-    opacity: 0.5,
+    opacity: 0.8,
   },
   lockOverlay: {
     position: 'absolute',
@@ -238,11 +263,8 @@ const styles = StyleSheet.create({
     height: 150,
     marginBottom: 15,
     position: 'relative',
-  },
-  modalMedalImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalLockOverlay: {
     position: 'absolute',
