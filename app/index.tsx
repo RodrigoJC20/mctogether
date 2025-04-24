@@ -13,9 +13,9 @@ export default function Home() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { modalVisible, setModalVisible } = useUIState();
-  const { 
-    mode, 
-    groupId, 
+  const {
+    mode,
+    groupId,
     members,
   } = usePartyState();
 
@@ -35,22 +35,30 @@ export default function Home() {
   const handlePartyButton = () => {
     setModalVisible(true);
   };
-  
+
   return (
     <ImageBackground source={require('../assets/images/bg.jpeg')} style={styles.background}>
-      <PetsArea 
+      <PetsArea
         myPet={user?._id ? {
           id: `pet-${user._id}`,
-          image: require('../assets/images/pet.png')
-        } : null} 
+          name: 'me',
+          type: 1,
+          hat: 3,
+          eyes: 0,
+          mouth: 0,
+        } : null}
         friendPets={members
           .filter(member => member.userId !== user?._id)
           .map(member => ({
             id: `pet-${member.userId}`,
-            image: require('../assets/images/pet.png')
-          }))} 
+            name: 'other',
+            type: 1,
+            hat: 1,
+            eyes: 1,
+            mouth: 1,
+          }))}
       />
-      
+
       <View style={styles.uiLayer}>
         <View style={styles.topBar}>
           <View style={styles.topBarLeft}>
@@ -86,8 +94,8 @@ export default function Home() {
               <FontAwesome5 name="ticket-alt" size={24} color="white" />
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.partyButton, groupId && styles.partyButtonActive]} 
+            <TouchableOpacity
+              style={[styles.partyButton, groupId && styles.partyButtonActive]}
               onPress={handlePartyButton}
             >
               <View style={styles.partyButtonContent}>

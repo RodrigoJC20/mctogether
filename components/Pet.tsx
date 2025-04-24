@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Animated, Easing, Dimensions, StyleSheet } from 'react-native';
+import { Animated, Easing, Dimensions, StyleSheet, Image, View, Text } from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -13,11 +13,40 @@ const BOUNDARIES = {
 
 interface PetProps {
   id: string;
-  image: any;
+  name: string;
+  type: number;
+  hat: number;
+  eyes: number;
+  mouth: number;
   isMyPet: boolean;
 }
 
-export const Pet: React.FC<PetProps> = ({ id, image, isMyPet }) => {
+const TYPE_IMAGES: { [key: number]: any } = {
+  0: require('../assets/images/pet/types/1.png'),
+  1: require('../assets/images/pet/types/2.png'),
+  2: require('../assets/images/pet/types/3.png'),
+};
+
+const EYES_IMAGES: { [key: number]: any } = {
+  0: require('../assets/images/pet/eyes/1.png'),
+  1: require('../assets/images/pet/eyes/2.png'),
+  2: require('../assets/images/pet/eyes/3.png'),
+};
+
+const MOUTH_IMAGES: { [key: number]: any } = {
+  0: require('../assets/images/pet/mouths/1.png'),
+  1: require('../assets/images/pet/mouths/2.png'),
+  2: require('../assets/images/pet/mouths/3.png'),
+};
+
+const HAT_IMAGES: { [key: number]: any } = {
+  0: null, // No hat
+  1: require('../assets/images/pet/hats/1.png'),
+  2: require('../assets/images/pet/hats/2.png'),
+  3: require('../assets/images/pet/hats/3.png'),
+};
+
+export const Pet: React.FC<PetProps> = ({ id, name, type, hat, eyes, mouth, isMyPet }) => {
   const [position, setPosition] = useState({
     x: SCREEN_WIDTH / 2 - 50,
     y: SCREEN_HEIGHT / 2 - 50,
@@ -154,29 +183,94 @@ export const Pet: React.FC<PetProps> = ({ id, image, isMyPet }) => {
   });
 
   return (
-    <Animated.Image
-      source={image}
+    <Animated.View
       style={[
-        styles.petImage,
+        styles.petContainer,
         {
           left: position.x,
           top: position.y,
+        }
+      ]}>
+      <Animated.View
+        style={{
+          width: 100,
+          height: 100,
+          alignItems: 'center',
+          justifyContent: 'center',
           transform: [
             { scaleX: Math.cos(direction) < 0 ? -1 : 1 },
             { rotate: rotateInterpolation },
             { translateY: translateYInterpolation }
           ]
-        }
-      ]}
-    />
+        }}>
+
+        <Image
+          source={TYPE_IMAGES[type] || TYPE_IMAGES[0]}
+          style={styles.petLayer}
+        />
+
+        <Image
+          source={EYES_IMAGES[eyes] || EYES_IMAGES[0]}
+          style={styles.petLayer}
+        />
+
+        <Image
+          source={MOUTH_IMAGES[mouth] || MOUTH_IMAGES[0]}
+          style={styles.petLayer}
+        />
+
+        {hat > 0 && HAT_IMAGES[hat] && (
+          <Image
+            source={HAT_IMAGES[hat]}
+            style={styles.petLayer}
+          />
+        )}
+      </Animated.View>
+
+      <View style={[
+        styles.nameTag,
+        isMyPet ? styles.myPetNameTag : null
+      ]}>
+        <Text style={styles.nameText}>{name}</Text>
+      </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  petImage: {
+
+  petContainer: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  petLayer: {
     position: 'absolute',
     width: 100,
     height: 100,
     resizeMode: 'contain',
   },
-}); 
+
+  nameTag: {
+    position: 'absolute',
+    bottom: -20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+
+  myPetNameTag: {
+    backgroundColor: 'rgba(230, 25, 25, 0.7)',
+  },
+
+  nameText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  }
+
+});
